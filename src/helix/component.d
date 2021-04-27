@@ -134,6 +134,10 @@ class Component
 	// TODO: always AUTO unless manually set?
 	private LayoutData layoutData;
 
+	void layoutFromJSON(JSONValue[string] jsonObj) {
+		layoutData.fromJSON(jsonObj);
+	}
+
 	/** calculate shape for this component. Non-recursive. */
 	final void applyLayout(Rectangle parentRect) {
 		// TODO - can this be done at the "layoutData" level? It doesn't have access to preferredSize... Pass as lazy parameter?
