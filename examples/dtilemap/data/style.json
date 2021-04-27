@@ -1,0 +1,33 @@
+{
+
+	"default": { 
+		"font": "DejaVuSans",
+		"color": "black"
+	},
+
+	"scrollbar": {
+		"size": 16,
+		"background": "#666666"
+	},
+
+	"slider": {
+		"min-size": 8,
+		"background": "#BBBBBB", 
+		"border": "#888888", 
+		"border-left": "#DDDDDD", 
+		"border-top": "#DDDDDD", 
+		"border-width": 2.0, 
+	},
+	"slider[selected]": {
+		"background": "#999999", 
+		"border": "#888888", 
+		"border-right": "#DDDDDD", 
+		"border-bottom": "#DDDDDD", 
+	},
+	"slider[hover]": {
+		"background": "#9999BB", 
+		"border": "#888888", 
+		"border-left": "#DDDDDD", 
+		"border-top": "#DDDDDD" 
+	}
+}
