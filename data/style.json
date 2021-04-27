@@ -1,0 +1,67 @@
+{
+
+	"root": { 
+		"font": "DejaVuSans",
+		"color": "black",
+		"background": "#666666"
+	},
+
+	"button": {
+		"background": "#BBBBBB", 
+		"border": "#888888", 
+		"border-left": "#DDDDDD", 
+		"border-top": "#DDDDDD", 
+		"border-width": 2.0, 
+		"color": "black"
+	},
+
+	"button[selected]": {
+		"background": "#999999", 
+		"border": "#888888", 
+		"border-right": "#DDDDDD", 
+		"border-bottom": "#DDDDDD", 
+	},
+
+	"button[hover]": {
+		"background": "#9999BB", 
+		"border": "#888888", 
+		"border-left": "#DDDDDD", 
+		"border-top": "#DDDDDD" 
+	},
+
+	"button[disabled]": {
+		"color": "#888888",
+		"background": "#444444",
+		"border-width": 0.0
+	},
+
+	"panel": {
+		"background": "#BBBBBB", 
+		"border": "#888888",
+		"border-left": "#DDDDDD", 
+		"border-top": "#DDDDDD", 
+		"border-width": 2.0, 
+		"color": "black"
+	},
+
+	"pre": {
+		"font-size": 14
+	},
+
+	"h1": {
+		"font-size": 28
+	},
+
+	"a": {
+		"text-decoration": "underline",
+		"color": "blue"
+	},
+
+	"b": {
+		"color": "red"
+	},
+
+	"i": {
+		"color": "white"
+	}
+}
