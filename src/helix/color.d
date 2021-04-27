@@ -1,10 +1,11 @@
 module helix.color;
 
 import allegro5.allegro;
+import allegro5.allegro_color;
 import std.conv;
 import std.regex;
 import std.math;
-import std.string : format;
+import std.string : format, toStringz;
 
 // for testing
 import std.stdio;
@@ -29,19 +30,7 @@ bool isTransparent(in ALLEGRO_COLOR color) {
 }
 
 ALLEGRO_COLOR parseColor(string s) {
-	// TODO: auto-generate from enum?
-	// TODO: make static?
-	ALLEGRO_COLOR[string] byName = [
-		"black": Color.BLACK,
-		"blue": Color.BLUE,
-		"red": Color.RED,
-		"white": Color.WHITE,
-		"transparent": Color.TRANSPARENT,
-	];
-
-	if (s in byName) {
-		return byName[s];
-	}
+	if (s == "transparent") return Color.TRANSPARENT;	
 
 	if (s[0] == '#') {
 		uint hex = to!uint(s[1..$], 16);
@@ -62,7 +51,8 @@ ALLEGRO_COLOR parseColor(string s) {
 		return ALLEGRO_COLOR(r, g, b, a);
 	}
 
-	return Color.BLACK;
+	// returns BLACK if color name not found.
+	return al_color_name(toStringz(s));
 }
 
 private bool colorEq(ALLEGRO_COLOR a, ALLEGRO_COLOR b) {
