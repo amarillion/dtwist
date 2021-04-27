@@ -1,0 +1,15 @@
+{
+	"name" : "dplot",
+	"description" : "Hello World - A minimal DUB bundle.",
+	"dependencies" : {
+		"allegro" : "4.0.4+5.2.0.commit.1.g672310c"
+	},
+	"subConfigurations" : {
+		"allegro" : "all-addons"
+	},
+	"sourcePaths" : [
+		"src",
+		"../../src"
+	],
+	"targetType" : "executable"
+}
