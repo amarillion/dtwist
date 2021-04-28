@@ -32,11 +32,6 @@ class Engine : Component {
 	this(MainLoop window) {
 		super(window, "default"); //TODO: window should be set by root component. No need to pass in constructor.
 
-		//TODO: easier way to clear screen...
-		auto desktop = new Component(window, "desktop");
-		desktop.setLocalStyle(parseJSON(`{ "background": "444444"} `));
-		addChild(desktop);
-		
 		l1 = new Label (window, "Hello World");
 		addChild (l1);
 		

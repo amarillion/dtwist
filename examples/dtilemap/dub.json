@@ -8,7 +8,8 @@
 		"allegro" : "all-addons"
 	},
 	"sourcePaths" : [
-		"src"
+		"src",
+		"../../src"
 	],
 	"targetType" : "executable"
 }

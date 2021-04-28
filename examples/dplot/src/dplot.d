@@ -90,7 +90,7 @@ void main()
 		auto mainloop = new MainLoop();		
 		mainloop.init();
 		mainloop.styles.apply(parseJSON(`{ 
-			"default": { "border": "yellow", "border-width": 1.0 }, 
+			"body": { "background": "steelblue" },
 			"textinput": { 
 				"background": "white", 
 				"border": "#888888", 

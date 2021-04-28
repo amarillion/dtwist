@@ -55,7 +55,7 @@ class Component
 	string text = null;
 
 	//TODO: put collection of styles together more sensibly...
-	protected Style[4] styleCache = [null, null, null, null]; // 0: normal, 1: selected, 2: disabled, 3: hover...
+	protected Style[5] styleCache = [null, null, null, null, null]; // 0: normal, 1: selected, 2: disabled, 3: hover, 4: focused ...
 	StyleData localStyle;
 	StyleData ancestorStyle;
 	
@@ -85,6 +85,7 @@ class Component
 				case 1: result = window.styles.getStyle(type, "selected", ancestorStyle, localStyle); break;
 				case 2: result = window.styles.getStyle(type, "disabled", ancestorStyle, localStyle); break;
 				case 3: result = window.styles.getStyle(type, "hover", ancestorStyle, localStyle); break;
+				case 4: result = window.styles.getStyle(type, "focused", ancestorStyle, localStyle); break;
 				default: assert(0);
 			}
 			styleCache[mode] = result;
@@ -98,7 +99,7 @@ class Component
 	 */
 	void setLocalStyle(JSONValue value) {
 		localStyle = StyleData.fromJSON("local", value);
-		styleCache = [null, null, null, null]; // clear cache
+		styleCache = [null, null, null, null, null]; // clear cache
 	}
 
 	/**
@@ -108,7 +109,7 @@ class Component
 	*/
 	void setAncestorStyle(StyleData value) {
 		ancestorStyle = value;
-		styleCache = [null, null, null, null]; // clear cache
+		styleCache = [null, null, null, null, null]; // clear cache
 	}		
 
 	void setText(string value) {
@@ -200,7 +201,7 @@ class Component
 	void draw(GraphicsContext gc) {
 		if (killed || hidden) return;
 		
-		const state = disabled ? 2 : (selected ? 1 : (hover ? 3 : 0));
+		const state = disabled ? 2 : (selected ? 1 : (focused ? 4 : (hover ? 3 : 0)));
 		Style style = getStyle(state);
 		
 		// render shadow
@@ -226,6 +227,12 @@ class Component
 		}
 
 		// render focus outline...
+		ALLEGRO_COLOR outlineColor = style.getColor("outline");
+		if (outlineColor != Color.TRANSPARENT) {
+			//TODO: make outline inset configurable...
+			al_draw_rectangle(x + 4, y + 4, x + w - 8, y + h - 8, outlineColor, 1.0);
+		}
+
 		// TODO
 
 		// and draw children.
@@ -258,6 +265,7 @@ class Component
 	/** should return true if keyboard event is handled, false otherwise */
 	public bool onKey(int code, int c, int mod) { return false; }
 	
+	Signal onScroll; // fire this when offset is changed...
 	Signal onAction;
 
 	public void onMouseEnter() {

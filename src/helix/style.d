@@ -12,16 +12,17 @@ import helix.allegro.font;
 import helix.allegro.bitmap;
 import std.array : appender;
 
-import std.stdio; // debugging
-
 private enum rootStyleData = parseJSON(`{
 	"root": {
 		"font": "builtin_font", 
 		"font-size": 17, 
 		"color": "white", 
-		"background": "transparent" 
+		"background": "transparent",
+		"outline": "transparent"
 	},
-
+	"body": {
+		"background": "transparent"
+	},
 	"button": {
 		"background": "#BBBBBB", 
 		"border": "#888888", 
@@ -47,7 +48,9 @@ private enum rootStyleData = parseJSON(`{
 		"background": "#444444",
 		"border-width": 0.0
 	},
-
+	"button[focused]": {
+		"outline": "yellow"
+	},
 	"panel": {
 		"background": "#BBBBBB", 
 		"border": "#888888",
@@ -113,6 +116,8 @@ private enum PropertyType[string] PROPERTY_TYPES = [
 	// cursor blink rate, for input fields
 	"blinkrate": PropertyType.NUMBER,
 	"cursor-color": PropertyType.COLOR,
+
+	"outline": PropertyType.COLOR,
 ];
 
 private enum string[string] fallbackProperties = [

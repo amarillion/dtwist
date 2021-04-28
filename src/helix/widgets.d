@@ -39,6 +39,7 @@ class Button : Component {
 		this(window);
 		this.text = text;
 		this.onAction.add(action);
+		canFocus = true;
 	}
 
 	this(MainLoop window) {

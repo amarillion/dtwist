@@ -37,6 +37,7 @@ void main()
 		
 		writefln("%s", mainloop.styles.getStyle("button"));
 		writefln("%s", mainloop.styles.getStyle("button", "selected"));
+		writefln("%s", mainloop.styles.getStyle("button", "focused"));
 
 		mainloop.addState("MainState", new MainState(mainloop));
 		mainloop.switchState("MainState"); // TODO: if there is only one state, no need to switch to it...

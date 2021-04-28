@@ -20,7 +20,6 @@ import helix.util.math;
 import helix.allegro.font;
 import helix.textstyle;
 import helix.util.browser;
-import std.stdio; // debug
 import std.json;
 
 enum defaultLineHeight = 16; // For lines with nothing in it. TODO: should depend on current font...

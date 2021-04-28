@@ -288,47 +288,75 @@ class MainLoop
 
 	}
 
+	Component capturedComponent;
+	Component focusComponent;
+
 	void dispatchMouseEvent(ALLEGRO_EVENT event) {
 		
 		Point cursor = Point(event.mouse.x, event.mouse.y);
-		Component comp = findComponentAt(cursor);
+		Component targetComponent;
 		
-		while (!entered.empty) {
-			if (entered[$-1] == comp) {
-				break;
-			}
-			else {
-				auto left = entered[$-1];
-				entered.popBack();
-				left.onMouseLeave();
-			}
+		if (capturedComponent) {
+			targetComponent = capturedComponent;
 		}
-
-		if (entered.empty || entered[$-1] != comp) {
-			comp.onMouseEnter();
-			entered ~= comp;
-		}
+		else {
+			targetComponent = findComponentAt(cursor);
 			
-		// TODO: capturing mouse events for scrollbars and sliders
+			// update stack of entered components, and send leave events as appropriate.
+			while (!entered.empty) {
+				if (entered[$-1] == targetComponent) {
+					break;
+				}
+				else {
+					auto left = entered[$-1];
+					entered.popBack();
+					left.onMouseLeave();
+				}
+			}
 
-		// go down the component tree...
+			// send enter events as appropriate
+			if (entered.empty || entered[$-1] != targetComponent) {
+				targetComponent.onMouseEnter();
+				entered ~= targetComponent;
+			}
+		}
+
 		switch (event.type) {
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 			{
-				comp.onMouseDown(cursor);
+				// offer focus to target component when clicking
+				if (!targetComponent.focused && targetComponent.canFocus) {
+					focus(targetComponent);
+				}
+				targetComponent.onMouseDown(cursor);
 				break;
 			}
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
 			{
-				comp.onMouseUp(cursor);
+				targetComponent.onMouseUp(cursor);
+				if (capturedComponent !is null) {
+					capturedComponent = null; // capture always ends on button release
+				}
 				break;
 			}
 			case ALLEGRO_EVENT_MOUSE_AXES:
 			{
-				comp.onMouseMove(cursor);
+				targetComponent.onMouseMove(cursor);
 				break;
 			}
 			default: assert(false);
+		}
+	}
+
+	void focus(Component c) {
+		if (focusComponent !is null) {
+			focusComponent.focused = false;
+			focusComponent.loseFocus();
+		}
+		focusComponent = c;
+		if (focusComponent !is null) {
+			focusComponent.focused = true;
+			focusComponent.gainFocus(); 
 		}
 	}
 
@@ -386,20 +414,9 @@ class MainLoop
 		al_uninstall_system();
 	}
 
-	/*
-	void setRootComponent(Component value)
-	{
-		assert(display, "Programming error: display must be initialized before calling setRootComponent()");
-		this.engine = value;
-		engine.w = al_get_display_width(display);
-		engine.h = al_get_display_height(display);
-		engine.x = 0;
-		engine.y = 0;
-		engine.window = this;
-
-		calculateLayout();
+	void captureMouse(Component c, Point p) {
+		capturedComponent = c;
 	}
-	*/
 
 	/**
 		Switches the complete scene to a new Scene
@@ -433,10 +450,11 @@ class MainLoop
 	class RootComponent : Component {
 
 		this(MainLoop window) {
-			super(window, "default");
+			super(window, "body");
 		}
 
 		override void draw(GraphicsContext gc) {
+			drawBackground(getStyle());
 			foreach (child; children) {
 				child.draw(gc);
 			}

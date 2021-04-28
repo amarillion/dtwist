@@ -125,7 +125,7 @@ class TextField : Component
 		ALLEGRO_COLOR color = style.getColor("color");
 		al_draw_text(style.getFont().ptr, color, x, y, ALLEGRO_ALIGN_LEFT, cast(const char*) (doc.text ~ '\0'));
 		
-		if (/* hasFocus() && */ blink >= 0) //TODO
+		if (focused && blink >= 0)
 		{
 			//TODO: configure cursor color
 			ALLEGRO_COLOR cursorColor = style.getColor("cursor-color");

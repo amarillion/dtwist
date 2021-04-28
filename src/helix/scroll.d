@@ -47,7 +47,7 @@ class ScrollPane : Component
 	
 	this(MainLoop window, Scrollable child)
 	{
-		super(window, "default");
+		super(window, "scrollpane");
 
 		sb1 = new ScrollBar(window, ScrollBar.Orientation.HORIZONTAL);
 		sb1.setScrollable(child);
@@ -62,7 +62,9 @@ class ScrollPane : Component
 		//TODO: make cast unnecessary
 		(cast(Component)child).setRelative (0,0,16,16,0,0,LayoutRule.STRETCH,LayoutRule.STRETCH);
 		addChild(cast(Component)child);
-		(cast(Component)child).onResize.add({ this.updateScrollBars(); });		
+		(cast(Component)child).onResize.add({ this.updateScrollBars(); });
+		(cast(Component)child).onScroll.add({ this.updateScrollBars(); });
+
 	}
 	
 	void updateScrollBars()
@@ -70,10 +72,6 @@ class ScrollPane : Component
 		sb1.updateSliderSize();
 		sb2.updateSliderSize();
 	}
-}
-
-void captureMouse(Point p) {
-	writeln("Capture mouse unimplemented");
 }
 
 class Slider : Component
@@ -112,9 +110,9 @@ class Slider : Component
 				mouse_relative_to_slider_edge = p.x - x;
 				break;
 			default:
-				assert (false);
+				assert (0);
 		}
-		captureMouse(p);
+		window.captureMouse(this, p);
 	}
 	
 	override void onMouseMove (Point p)
@@ -140,13 +138,13 @@ class Slider : Component
 			
 			double pos = new_slider_edge - rangeMin;
 			double range = (rangeMax - rangeMin) - slider_size;
-			double fraction = pos / range;
+			double fraction = range == 0 ? 0 : pos / range;
 			if (fraction < 0) fraction = 0;
 			if (fraction > 1) fraction = 1;
 	
 			// We don't actually change the slider directly
 			// we update the parent scrollable and rely on the 
-			// scrolllistener to move the slider in response. 
+			// scrolllistener to move the slider in response.
 			fireSliderPositionChanged(fraction);
 		}
 	}
@@ -220,7 +218,6 @@ class ScrollBar : Component, SliderPositionListener
 			pos = (sliderarea - sliderSize) * ((delta == 0) ? 0 : offset / delta);			
 		}
 		
-		writefln("Slider: %s %s", sliderSize, short_side + pos);
 		if (orientation == Orientation.HORIZONTAL) {
 			slider.setRelative(to!int(short_side + pos), 0, 0, 0, to!int(sliderSize), 16, LayoutRule.BEGIN, LayoutRule.BEGIN);
 			window.calculateLayout(this); //TODO: can this be triggered automatically?

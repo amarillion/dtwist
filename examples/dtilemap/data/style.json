@@ -5,6 +5,13 @@
 		"color": "black"
 	},
 
+	"body": { 
+		"background": "teal"
+	},
+	
+	"scrollpane": {
+		"background": "#333333"
+	},
 	"scrollbar": {
 		"size": 16,
 		"background": "#666666"
