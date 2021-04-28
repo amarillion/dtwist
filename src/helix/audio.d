@@ -20,8 +20,8 @@ class AudioManager {
 
 	this() {
 		currentMusic = null;
-		musicVolume.onChange.add({
-			updateMusicVolume();
+		musicVolume.onChange.add((e) {
+			updateMusicVolume(e.newValue);
 		});
 	}
 
@@ -70,16 +70,16 @@ class AudioManager {
 		musicVolume.set(
 			get_config!float(config, "twist", "musicVolume", musicVolume.get())
 		);
-		musicVolume.onChange.add({
-			set_config!float(config, "twist", "musicVolume", musicVolume.get());
+		musicVolume.onChange.add((e) {
+			set_config!float(config, "twist", "musicVolume", e.newValue);
 		});
 
 		soundVolume.set(
 			get_config!float(config, "twist", "soundVolume", soundVolume.get())
 		);
 
-		soundVolume.onChange.add({
-			set_config!float(config, "twist", "soundVolume", soundVolume.get());
+		soundVolume.onChange.add((e) {
+			set_config!float(config, "twist", "soundVolume", e.newValue);
 		});
 
 	}
@@ -112,11 +112,11 @@ class AudioManager {
 		al_set_audio_stream_gain(currentMusic, volume * musicVolume.get());
 	}
 
-	void updateMusicVolume() {
+	void updateMusicVolume(float volume) {
 		if (!isSoundInstalled()) return;
 
 		if (currentMusic) {
-			al_set_audio_stream_gain(currentMusic, musicVolume.get());
+			al_set_audio_stream_gain(currentMusic, volume);
 		}
 	}
 			

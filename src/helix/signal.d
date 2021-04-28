@@ -2,32 +2,37 @@ module helix.signal;
 
 import helix.util.math;
 
-struct Signal {
+struct Signal(T) {
+	void delegate(T)[] listeners;
 
-	void delegate()[] listeners;
-
-	void add(void delegate() f) {
+	void add(void delegate(T) f) {
 		listeners ~= f;
 	}
 
-	void dispatch() {
+	void dispatch(T t) {
 		foreach (f; listeners) {
-			f();
+			f(t);
 		}
 	}
 
 	// TODO - removing listeners
 }
 
+struct ChangeEvent(T) {
+	T oldValue;
+	T newValue;
+}
+
 struct Model(T) {
 
-	Signal onChange;
+	Signal!(ChangeEvent!T) onChange;
 	private T _val;
 
-	void set (T val) {
-		if (val != _val) {
-			_val = val;
-			onChange.dispatch();
+	void set (T newVal) {
+		if (newVal != _val) {
+			T oldVal = _val;
+			_val = newVal;
+			onChange.dispatch(ChangeEvent!T(oldVal, newVal));
 		}
 	}
  
@@ -36,10 +41,9 @@ struct Model(T) {
 	}
 }
 
-
 struct RangeModel(T) {
 
-	Signal onChange;
+	Signal!(ChangeEvent!(T)) onChange;
 	private T _val;
 	private T min;
 	private T max;
@@ -53,8 +57,9 @@ struct RangeModel(T) {
 	void set (T val) {
 		T newVal = bound(min, val, max);
 		if (newVal != _val) {
+			T oldVal = _val;
 			_val = newVal;
-			onChange.dispatch();
+			onChange.dispatch(ChangeEvent!T(oldVal, _val));
 		}		
 	}
  

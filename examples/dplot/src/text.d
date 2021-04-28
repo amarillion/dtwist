@@ -191,7 +191,7 @@ class TextField : Component
 				return true;
 				
 			case ALLEGRO_KEY_ENTER:
-				onAction.dispatch();
+				onAction.dispatch(ComponentEvent(this));
 				return true;
 				
 			default:

@@ -286,7 +286,7 @@ class Link : TextSpan {
 	this(MainLoop window, string _url = null) {
 		super(window, "a");
 		this.url = _url;
-		this.onAction.add(() => this.onClick());
+		this.onAction.add(e => this.onClick());
 	}
 
 	private void onClick() {
@@ -295,8 +295,7 @@ class Link : TextSpan {
 
 	override void onMouseDown(Point p) {
 		if (!disabled) {
-			onAction.dispatch();
-			
+			onAction.dispatch(ComponentEvent(this));
 		}
 	}
 

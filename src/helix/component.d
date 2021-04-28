@@ -35,6 +35,11 @@ enum SizeRule {
 	MANUAL
 };
 
+struct ComponentEvent {
+	Component source;
+}
+
+
 /**
 A component occupies an area (x,y,w,h) and 
 knows how to draw itself. 
@@ -153,8 +158,9 @@ class Component
 		
 		const newShape = layoutData.calculate(parentRect);
 		if (newShape != _shape) {
+			const oldShape = _shape;
 			_shape = newShape;
-			this.onResize.dispatch();
+			this.onResize.dispatch(ChangeEvent!Rectangle(oldShape, newShape));
 		}
 	}
 
@@ -265,8 +271,8 @@ class Component
 	/** should return true if keyboard event is handled, false otherwise */
 	public bool onKey(int code, int c, int mod) { return false; }
 	
-	Signal onScroll; // fire this when offset is changed...
-	Signal onAction;
+	Signal!(ChangeEvent!Point) onScroll; // fire this when offset is changed...
+	Signal!ComponentEvent onAction;
 
 	public void onMouseEnter() {
 		this.hover = true;
@@ -296,7 +302,7 @@ class Component
 	/**
 		Called whenever the shape of this component has been recalculated 
 	*/
-	Signal onResize;
+	Signal!(ChangeEvent!Rectangle) onResize;
 
 	public bool contains(Point p)
 	{

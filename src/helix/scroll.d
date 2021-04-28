@@ -6,23 +6,13 @@ import helix.mainloop;
 import helix.util.vec;
 import helix.layout;
 import helix.widgets;
+import helix.signal;
 
 import std.stdio;
 import std.algorithm;
 import std.conv;
 
 import allegro5.allegro;
-
-/**
-Listens for events generating while dragging a slider
-
-Used by scrollbars to update the scrollarea in response to 
-dragging the slider.
-*/
-interface SliderPositionListener
-{
-	void onSliderPositionChanged(double fraction);
-}
 
 /**
 A scrollable is a component that is only partially shown, with scrollbars on the side.
@@ -62,8 +52,8 @@ class ScrollPane : Component
 		//TODO: make cast unnecessary
 		(cast(Component)child).setRelative (0,0,16,16,0,0,LayoutRule.STRETCH,LayoutRule.STRETCH);
 		addChild(cast(Component)child);
-		(cast(Component)child).onResize.add({ this.updateScrollBars(); });
-		(cast(Component)child).onScroll.add({ this.updateScrollBars(); });
+		(cast(Component)child).onResize.add((e) { this.updateScrollBars(); });
+		(cast(Component)child).onScroll.add((e) { this.updateScrollBars(); });
 
 	}
 	
@@ -76,7 +66,10 @@ class ScrollPane : Component
 
 class Slider : Component
 {
-	private SliderPositionListener listener;
+	private Signal!double onSliderPositionChanged;
+	private double rangeMin = 0;
+	private double rangeMax = 0;
+
 	private ScrollBar.Orientation orientation;
 	
 	this(MainLoop window, ScrollBar.Orientation orientation)
@@ -87,9 +80,6 @@ class Slider : Component
 	
 	private double mouse_relative_to_slider_edge = 0; // difference between left / top and capture start
 	bool captured = false;
-	
-	private double rangeMin = 0;
-	private double rangeMax = 0;
 	
 	override void onMouseUp (Point p)
 	{
@@ -145,25 +135,12 @@ class Slider : Component
 			// We don't actually change the slider directly
 			// we update the parent scrollable and rely on the 
 			// scrolllistener to move the slider in response.
-			fireSliderPositionChanged(fraction);
-		}
-	}
-	
-	void setSliderPositionListener(SliderPositionListener value)
-	{
-		listener = value;
-	}
-	
-	void fireSliderPositionChanged(double fraction)
-	{
-		if (listener)
-		{
-			listener.onSliderPositionChanged(fraction);
+			onSliderPositionChanged.dispatch(fraction);
 		}
 	}
 }
 
-class ScrollBar : Component, SliderPositionListener
+class ScrollBar : Component
 {
 	enum Orientation { HORIZONTAL, VERTICAL }
 	
@@ -176,7 +153,7 @@ class ScrollBar : Component, SliderPositionListener
 	this(MainLoop window) {
 		super(window, "slider");
 
-		onResize.add({ updateSliderSize(); });
+		onResize.add(e => updateSliderSize());
 	}
 	
 	private void updateSliderSize()
@@ -251,32 +228,31 @@ class ScrollBar : Component, SliderPositionListener
 		orientation = _orientation;
 		if (orientation == Orientation.HORIZONTAL)
 		{
-			bDec.onAction.add ({ onMove(-4, 0); updateSliderSize(); });
+			bDec.onAction.add ((e) { onMove(-4, 0); updateSliderSize(); });
 			bDec.icon = window.resources.bitmaps["icon-arrow-left"];
 			bDec.setRelative(0, 0, 0, 0, short_sidei, 0, LayoutRule.BEGIN, LayoutRule.STRETCH);
-			bInc.onAction.add ({ onMove(4, 0); updateSliderSize(); });
+			bInc.onAction.add ((e) { onMove(4, 0); updateSliderSize(); });
 			bInc.icon = window.resources.bitmaps["icon-arrow-right"];
 			bInc.setRelative(0, 0, 0, 0, short_sidei, 0, LayoutRule.END, LayoutRule.STRETCH);
 		}
 		else
 		{
-			bDec.onAction.add({ onMove(0, -4); updateSliderSize(); });
+			bDec.onAction.add((e) { onMove(0, -4); updateSliderSize(); });
 			bDec.icon = window.resources.bitmaps["icon-arrow-up"];
 			bDec.setRelative(0, 0, 0, 0, 0, short_sidei, LayoutRule.STRETCH, LayoutRule.BEGIN);
-			bInc.onAction.add({ onMove(0, 4); updateSliderSize(); });
+			bInc.onAction.add((e) { onMove(0, 4); updateSliderSize(); });
 			bInc.icon = window.resources.bitmaps["icon-arrow-down"];
 			bInc.setRelative(0, 0, 0, 0, 0, short_sidei, LayoutRule.STRETCH, LayoutRule.END);
 		}
 		slider = new Slider(window, orientation);
-		slider.setSliderPositionListener(this);
+		slider.onSliderPositionChanged.add(e => onSliderPositionChanged(e));
 		updateSliderSize();	
 		addChild(bDec);
 		addChild(bInc);
 		addChild(slider);
 	}
 	
-	override
-	void onSliderPositionChanged(double fraction)
+	private final void onSliderPositionChanged(double fraction)
 	{
 		if (!scrollable) return;
 		

@@ -39,7 +39,7 @@ class Engine : Component
 		TextField txtA = new TextField (window, to!string(a));
 		// txtA.setPosition(20, 40);
 		txtA.setRelative(20, 40, 0, 0, 80, 20, LayoutRule.BEGIN, LayoutRule.BEGIN);
-		txtA.onAction.add({ a = to!double(txtA.doc.getText()); /* pa.dirty = true; */ });
+		txtA.onAction.add((e) { a = to!double(txtA.doc.getText()); /* pa.dirty = true; */ });
 		addChild (txtA);
 		
 		Label lblB = new Label(window, "b=" ~ to!string(b));
@@ -50,7 +50,7 @@ class Engine : Component
 		TextField txtB = new TextField (window, to!string(b));
 		// txtB.setPosition(20, 80);
 		txtB.setRelative(20, 80, 0, 0, 80, 20, LayoutRule.BEGIN, LayoutRule.BEGIN);
-		txtB.onAction.add({ b = to!double(txtB.doc.getText()); /* pa.dirty = true; */ });
+		txtB.onAction.add((e) { b = to!double(txtB.doc.getText()); /* pa.dirty = true; */ });
 		addChild (txtB);
 
 		Label lblC = new Label(window, "c=" ~ to!string(c));
@@ -61,7 +61,7 @@ class Engine : Component
 		TextField txtC = new TextField (window, to!string(c));
 		// txtC.setPosition(20, 120);
 		txtC.setRelative(20, 120, 0, 0, 80, 20, LayoutRule.BEGIN, LayoutRule.BEGIN);
-		txtC.onAction.add({ c = to!double(txtC.doc.getText()); /* pa.dirty = true; */ });
+		txtC.onAction.add((e) { c = to!double(txtC.doc.getText()); /* pa.dirty = true; */ });
 		addChild (txtC);
 		
 		//TODO

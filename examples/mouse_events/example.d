@@ -11,17 +11,19 @@ class MainState : Component {
 	this(MainLoop window) {
 		super(window, "default" /* TODO: unnecessary... */);
 		
+		void delegate(ComponentEvent) eventHandler = e => writefln("Clicked button `%s`", e.source.text);
+
 		Button button = new Button(window);
 		button.text = "Test button";
 		button.setRelative(0, 0, 0, 0, 200, 32, LayoutRule.CENTER, LayoutRule.CENTER);
-		button.onAction.add({ writeln ("Button clicked"); });
+		button.onAction.add(eventHandler);
 		addChild(button);
 
 		Button button2 = new Button(window);
 		button2.text = "Disabled button";
 		button2.setRelative(0, 80, 0, 0, 200, 32, LayoutRule.CENTER, LayoutRule.CENTER);
 		button2.disabled = true;
-		button2.onAction.add({ writeln ("Button2 clicked"); });
+		button2.onAction.add(eventHandler);
 		addChild(button2);
 	}
 }

@@ -4,6 +4,7 @@ import std.stdio;
 import std.conv;
 import std.math;
 import std.json;
+import std.format;
 
 import allegro5.allegro;
 import allegro5.allegro_font;
@@ -15,6 +16,7 @@ import helix.widgets;
 import helix.scroll;
 import helix.tilemap;
 import helix.layout;
+import helix.util.vec;
 
 import tilemapview;
 
@@ -35,13 +37,7 @@ class Engine : Component {
 		l1 = new Label (window, "Hello World");
 		addChild (l1);
 		
-		lblCursor = new Label (window, "Cursor at x, y");
-		addChild (lblCursor);
-		// TODO: left-align style
-		lblCursor.setRelative(16, 0, 16, 16, 0, 16, LayoutRule.STRETCH, LayoutRule.END);
-		lblCursor.setLocalStyle(parseJSON(`{ "font-size": 32, "color": "blue" }`)); //TODO: alternative without JSON
-
-		b1 = new Button(window, "Button", { count++; b1.text = "pressed #" ~ to!string (count); });
+		b1 = new Button(window, "Button", (e) { count++; b1.text = "pressed #" ~ to!string (count); });
 		b1.setShape(50, 50, 200, 16); //TODO: some default width & height
 		addChild (b1);
 
@@ -51,6 +47,14 @@ class Engine : Component {
 
 		tmv = new TilemapView(window);
 		tmv.tileMap = tileMap;
+
+		auto labelFormatter = (Point p) => format("Cursor at %s", p);
+		lblCursor = new Label (window, labelFormatter(tmv.cursor.get()));
+		addChild (lblCursor);
+		// TODO: left-align style
+		lblCursor.setRelative(16, 0, 16, 16, 0, 16, LayoutRule.STRETCH, LayoutRule.END);
+		lblCursor.setLocalStyle(parseJSON(`{ "font-size": 32, "color": "yellow" }`)); //TODO: alternative without JSON
+		tmv.cursor.onChange.add((e) { lblCursor.text = labelFormatter(e.newValue); });
 
 		//TODO: hide / show scrollbars automatically
 		sp = new ScrollPane (window, tmv);

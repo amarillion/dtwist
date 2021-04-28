@@ -110,7 +110,7 @@ class MainLoop
 		const monitorH = info.y2 - info.y1;
 		
 		//NOTE: int.max means: automatic positioning
-		//Trying to persist x,y was too buggy
+		//Trying to persist x,y was too buggy, see: https://www.allegro.cc/forums/thread/618393
 		result.x = int.max;
 		result.y = int.max;
 
@@ -206,24 +206,30 @@ class MainLoop
 				al_wait_for_event(queue, &event);
 				switch(event.type)
 				{
-					case ALLEGRO_EVENT_DISPLAY_RESIZE:
-					{
+					case ALLEGRO_EVENT_DISPLAY_RESIZE: {
 						al_acknowledge_resize(event.display.source);
 						calculateLayout();
 						break;
 					}
-					case ALLEGRO_EVENT_DISPLAY_CLOSE:
-					{
+					case ALLEGRO_EVENT_DISPLAY_CLOSE: {
+						// TODO: ask for close...
 						exit = true;
 						break;
 					}
-					case ALLEGRO_EVENT_KEY_CHAR:
-					{
-						rootComponent.onKey(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers);
+					case ALLEGRO_EVENT_KEY_CHAR: {
+						if (focusComponent) {
+							focusComponent.onKey(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers);
+						}
+						// TODO: bubble up?
+						// TODO: global keyboard accelerators?
 						switch(event.keyboard.keycode)
 						{
-							case ALLEGRO_KEY_ESCAPE:
-							{
+							case ALLEGRO_KEY_TAB: {
+								advanceFocus();
+								break;
+							}
+							case ALLEGRO_KEY_ESCAPE: {
+								// TODO: ask for close...
 								exit = true;
 								break;
 							}
@@ -285,7 +291,10 @@ class MainLoop
 			}
 		}
 		return comp;
+	}
 
+	private void advanceFocus() {
+		writeln("Advancing focus not yet implemented");
 	}
 
 	Component capturedComponent;

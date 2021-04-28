@@ -35,7 +35,7 @@ class ImageComponent : Component {
 
 class Button : Component {
 
-	this(MainLoop window, string text, void delegate() action) {
+	this(MainLoop window, string text, void delegate(ComponentEvent) action) {
 		this(window);
 		this.text = text;
 		this.onAction.add(action);
@@ -52,7 +52,7 @@ class Button : Component {
 
 	override void onMouseDown(Point p) {
 		if (!disabled) {
-			onAction.dispatch();
+			onAction.dispatch(ComponentEvent(this));
 		}
 		this.selected = true;
 	}
