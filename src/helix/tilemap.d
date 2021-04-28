@@ -13,9 +13,9 @@ import std.conv;
 
 struct TileList {
 	/** deprecated */
-	@property int tilew() { return tileSize.x; }
+	@property int tilew() const { return tileSize.x; }
 	/** deprecated */
-	@property int tileh() { return tileSize.y; }
+	@property int tileh() const { return tileSize.y; }
 
 	Point tileSize;
 	
@@ -39,11 +39,11 @@ class TileMap {
 	TileList tilelist;
 
 	private int _width, _height;
-	@property int width() { return _width; }
-	@property int height() { return _height; }
+	@property int width() const { return _width; }
+	@property int height() const { return _height; }
 	
-	int pxWidth() { return _width * tilelist.tilew; }
-	int pxHeight() { return _height * tilelist.tileh; }
+	int pxWidth() const { return _width * tilelist.tilew; }
+	int pxHeight() const { return _height * tilelist.tileh; }
 	
 	this(int width, int height, int numLayers) {
 		this._width = width;

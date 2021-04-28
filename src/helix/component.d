@@ -169,6 +169,23 @@ class Component
 		return 0;
 	}
 
+	private Model!Point _offset;
+	@property Point offset() const { return _offset.get(); }
+
+	/** event fired whenever offset changes. onScroll is just an alias for offset.onChange  */
+	@property ref Signal!(ChangeEvent!Point) onScroll() { return _offset.onChange; }
+
+	final void setOffsetY(double value) {
+		const oldVal = _offset.get(); 
+		_offset.set(Point(oldVal.x, to!int(value)));
+	}
+	
+	final void setOffsetX(double value) { 
+		const oldVal = _offset.get(); 
+		_offset.set(Point(to!int(value), oldVal.y));
+	}
+
+	// designed for overriding
 	Point getPreferredSize() {
 		const width = getStyle().getNumber("width");
 		const height = getStyle().getNumber("height");
@@ -271,16 +288,15 @@ class Component
 	/** should return true if keyboard event is handled, false otherwise */
 	public bool onKey(int code, int c, int mod) { return false; }
 	
-	Signal!(ChangeEvent!Point) onScroll; // fire this when offset is changed...
 	Signal!ComponentEvent onAction;
 
 	public void onMouseEnter() {
-		this.hover = true;
+		hover = true;
 	}
 
 	public void onMouseLeave() {
-		this.hover = false;
-		this.selected = false;
+		hover = false;
+		selected = false;
 	}
 	
 	public void onMouseMove(Point p) { }
@@ -289,15 +305,13 @@ class Component
 
 	public void onMouseUp(Point p) { }
 
-	public void gainFocus() { }
-	
-	// public bool hasFocus() 
-	// { 
-	// 	if (!cparent) return false;
-	// 	return cparent.focus == this;
-	// }
-	
-	public void loseFocus() { }
+	public void gainFocus() { 
+		focused = true;
+	}
+		
+	public void loseFocus() { 
+		focused = false;
+	}
 	
 	/**
 		Called whenever the shape of this component has been recalculated 

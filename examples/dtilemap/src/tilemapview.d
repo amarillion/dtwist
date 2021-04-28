@@ -18,37 +18,14 @@ import allegro5.allegro_primitives;
 // TODO: generic grid view that can be used for tables as well?
 class TilemapView : Component, Scrollable {
 
-	private Point _offset;
-	@property Point offset() { return _offset; }
-
 	//TODO: system should provide more help in implementing these.
 	// maybe they should be built into Component?
 	override void move(double deltax, double deltay) {}
-	
-	override void setOffsetY(double value) { 
-		const oldVal = offset; 
-		const newCoord = to!int(value);
-		if (newCoord != oldVal.y) {
-			_offset.y = newCoord;
-			onScroll.dispatch(ChangeEvent!Point(oldVal, _offset));
-		}
-	}
-	
-	override void setOffsetX(double value) { 
-		const oldVal = offset;
-		const newCoord = to!int(value); 
-		if (newCoord != oldVal.x) {
-			_offset.x = newCoord;
-			onScroll.dispatch(ChangeEvent!Point(oldVal, _offset)); 
-		}
-	}
-	
+
 	override double getViewportWidth() { return w; }
 	override double getViewportHeight() { return h; }
-	override double getOffsetX() { return offset.x; }
-	override double getOffsetY() { return offset.y; }
 	
-	override Point getPreferredSize() { return Point (_tileMap.pxWidth(), _tileMap.pxHeight()); }
+	override Point getPreferredSize() const { return Point (_tileMap.pxWidth(), _tileMap.pxHeight()); }
 
 	this(MainLoop window) {
 		super(window, "default");

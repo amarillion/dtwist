@@ -23,44 +23,49 @@ A scrollable is also the model, i.e. the autoritative source, for scrolling posi
 interface Scrollable
 {
 	public void move(double deltax, double deltay);
-	public void setOffsetY(double value);
-	public void setOffsetX(double value);
 	public double getViewportWidth();
 	public double getViewportHeight();
-	public double getOffsetX();
-	public double getOffsetY();
 }
 
 class ScrollPane : Component
 {
-	ScrollBar sb1, sb2;
+	ScrollBar sbh, sbv;
 	
-	this(MainLoop window, Scrollable child)
-	{
+	this(MainLoop window, Scrollable child) {
 		super(window, "scrollpane");
 
-		sb1 = new ScrollBar(window, ScrollBar.Orientation.HORIZONTAL);
-		sb1.setScrollable(child);
-		sb1.setRelative(0,0,16,0,16,16,LayoutRule.STRETCH,LayoutRule.END);
-		addChild(sb1);
+		sbh = new ScrollBar(window, ScrollBar.Orientation.HORIZONTAL);
+		sbh.setScrollable(child);
+		sbh.setRelative(0,0,16,0,16,16,LayoutRule.STRETCH,LayoutRule.END);
+		addChild(sbh);
 
-		sb2 = new ScrollBar(window, ScrollBar.Orientation.VERTICAL);
-		sb2.setScrollable(child);
-		sb2.setRelative(0,0,0,16,16,16,LayoutRule.END,LayoutRule.STRETCH);
-		addChild(sb2);
+		sbv = new ScrollBar(window, ScrollBar.Orientation.VERTICAL);
+		sbv.setScrollable(child);
+		sbv.setRelative(0,0,0,16,16,16,LayoutRule.END,LayoutRule.STRETCH);
+		addChild(sbv);
 		
 		//TODO: make cast unnecessary
-		(cast(Component)child).setRelative (0,0,16,16,0,0,LayoutRule.STRETCH,LayoutRule.STRETCH);
-		addChild(cast(Component)child);
-		(cast(Component)child).onResize.add((e) { this.updateScrollBars(); });
-		(cast(Component)child).onScroll.add((e) { this.updateScrollBars(); });
+		auto childComponent = (cast(Component)child);
 
-	}
-	
-	void updateScrollBars()
-	{
-		sb1.updateSliderSize();
-		sb2.updateSliderSize();
+		childComponent.setRelative (0,0,16,16,0,0,LayoutRule.STRETCH,LayoutRule.STRETCH);
+		addChild(childComponent);
+		childComponent.onResize.add((e) { 
+			if (e.newValue.w != e.oldValue.w) {
+				sbh.updateSliderSize();
+			}
+			if (e.newValue.h != e.oldValue.h) {
+				sbv.updateSliderSize();
+			}
+		});
+		childComponent.onScroll.add((e) { 
+			const delta = e.newValue - e.oldValue;
+			if (delta.x != 0) {
+				sbh.updateSliderSize();
+			}
+			if (delta.y != 0) {
+				sbv.updateSliderSize();
+			}
+		});
 	}
 }
 
@@ -161,16 +166,17 @@ class ScrollBar : Component
 		double sliderSize = min_slider_size, pos = 0;
 		double offset, viewportsize, preferredsize, sliderarea;
 		
+		// TODO: get rid of cast
+		Component scrollableComponent = cast(Component)scrollable;
+		
 		if (orientation == Orientation.HORIZONTAL)
 		{
 			sliderarea = (w - (2 * short_side));
 			if (scrollable)
 			{
-				offset = scrollable.getOffsetX();
+				offset = scrollableComponent.offset.x;
 				viewportsize = scrollable.getViewportWidth();
-
-				// TODO: get rid of cast
-				preferredsize = (cast(Component)scrollable).getPreferredSize().x;
+				preferredsize = scrollableComponent.getPreferredSize().x;
 			}
 		}
 		else
@@ -178,9 +184,9 @@ class ScrollBar : Component
 			sliderarea = (h - (2 * short_side));
 			if (scrollable)
 			{
-				offset = scrollable.getOffsetY();
+				offset = scrollableComponent.offset.y;
 				viewportsize = scrollable.getViewportHeight();
-				preferredsize = (cast(Component)scrollable).getPreferredSize().y;
+				preferredsize = scrollableComponent.getPreferredSize().y;
 			}
 		}
 		
@@ -198,15 +204,15 @@ class ScrollBar : Component
 		if (orientation == Orientation.HORIZONTAL) {
 			slider.setRelative(to!int(short_side + pos), 0, 0, 0, to!int(sliderSize), 16, LayoutRule.BEGIN, LayoutRule.BEGIN);
 			window.calculateLayout(this); //TODO: can this be triggered automatically?
-			slider.rangeMin = x + short_side;			
-			slider.rangeMax = x + w - short_side;		
+			slider.rangeMin = x + short_side;
+			slider.rangeMax = x + w - short_side;
 		}
 		else
 		{
 			slider.setRelative(0, to!int(short_side + pos), 0, 0, 16, to!int(sliderSize), LayoutRule.BEGIN, LayoutRule.BEGIN);
 			window.calculateLayout(this); //TODO: can this be triggered automatically?
-			slider.rangeMin = y + short_side;			
-			slider.rangeMax = y + h - short_side;		
+			slider.rangeMin = y + short_side;
+			slider.rangeMax = y + h - short_side;
 		}
 	}
 	
@@ -246,7 +252,7 @@ class ScrollBar : Component
 		}
 		slider = new Slider(window, orientation);
 		slider.onSliderPositionChanged.add(e => onSliderPositionChanged(e));
-		updateSliderSize();	
+		updateSliderSize();
 		addChild(bDec);
 		addChild(bInc);
 		addChild(slider);
@@ -256,18 +262,21 @@ class ScrollBar : Component
 	{
 		if (!scrollable) return;
 		
+		// TODO: get rid of cast
+		Component scrollableComponent = (cast(Component)scrollable);
+
 		switch (orientation)
 		{
 			case Orientation.VERTICAL:
 			{
-				double offset = fraction * ((cast(Component)scrollable).getPreferredSize().x - scrollable.getViewportHeight());
-				scrollable.setOffsetY(offset);
+				const offset = fraction * (scrollableComponent.getPreferredSize().x - scrollable.getViewportHeight());
+				scrollableComponent.setOffsetY(offset);
 			}
 			break;
 			case Orientation.HORIZONTAL:
 			{
-				double offset = fraction * ((cast(Component)scrollable).getPreferredSize().y - scrollable.getViewportWidth());
-				scrollable.setOffsetX(offset);
+				const offset = fraction * ((cast(Component)scrollable).getPreferredSize().y - scrollable.getViewportWidth());
+				scrollableComponent.setOffsetX(offset);
 			}
 			break;
 			default: assert(false);

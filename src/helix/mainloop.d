@@ -359,12 +359,10 @@ class MainLoop
 
 	void focus(Component c) {
 		if (focusComponent !is null) {
-			focusComponent.focused = false;
 			focusComponent.loseFocus();
 		}
 		focusComponent = c;
 		if (focusComponent !is null) {
-			focusComponent.focused = true;
 			focusComponent.gainFocus(); 
 		}
 	}

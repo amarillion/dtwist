@@ -36,7 +36,7 @@ struct Model(T) {
 		}
 	}
  
-	T get() {
+	T get() const {
 		return _val;
 	}
 }
