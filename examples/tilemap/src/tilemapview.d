@@ -47,8 +47,7 @@ class TilemapView : Component, Scrollable {
 		Point ofst = Point(-x, -y) + offset;
 		draw_tilemap(_tileMap, shape, ofst);
 		
-		const mp = cursor.get();
-		Point px1 = (mp * _tileMap.tilelist.tileSize) - ofst;
+		Point px1 = (cursor * _tileMap.tilelist.tileSize) - ofst;
 		Point px2 = px1 + _tileMap.tilelist.tileSize - 1;
 		al_draw_rectangle(px1.x, px1.y, px2.x, px2.y, Color.WHITE, 1.0);
 	}
@@ -57,7 +56,7 @@ class TilemapView : Component, Scrollable {
 		const ofst = Point(-x, -y) + offset;
 		Point mp = (p + ofst) / _tileMap.tilelist.tileSize;
 		if (_tileMap.layers[0].inRange(mp)) {
-			cursor.set(mp);
+			cursor = mp;
 		}
 	}
 

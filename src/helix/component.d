@@ -170,7 +170,7 @@ class Component
 	}
 
 	private Model!Point _offset;
-	@property Point offset() const { return _offset.get(); }
+	@property Point offset() const { return _offset.dup(); }
 
 	/** event fired whenever offset changes. onScroll is just an alias for offset.onChange  */
 	@property ref Signal!(ChangeEvent!Point) onScroll() { return _offset.onChange; }
