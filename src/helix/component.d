@@ -151,7 +151,7 @@ class Component
 	}
 
 	/** calculate shape for this component. Non-recursive. */
-	void applyLayout(Rectangle parentRect) {
+	final void applyLayout(Rectangle parentRect) {
 		// TODO - can this be done at the "layoutData" level? It doesn't have access to preferredSize... Pass as lazy parameter?
 		if (sizeRule == SizeRule.AUTO) {
 			const p = getPreferredSize();
@@ -170,10 +170,23 @@ class Component
 		}
 	}
 
+	//TODO: naming
+	void calculateRecursive(Rectangle parentRect) {
+		applyLayout(parentRect);
+		
+		foreach(child; children) {
+			child.calculateRecursive(shape);
+		}
+	}
+
 	// designed for overriding
 	protected int calculateHeight(int width) {
 		return 0;
 	}
+
+	// to be overridden by ViewPort only.
+	@property
+	Point offset() const { return Point(0); } 
 
 	// designed for overriding
 	Point getPreferredSize() {

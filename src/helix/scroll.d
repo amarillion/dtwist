@@ -74,7 +74,7 @@ class ViewPort : Component {
 	}
 
 	private Model!Point _offset;
-	@property Point offset() const { return _offset.dup(); }
+	@property override Point offset() const { return _offset.dup(); }
 
 	/** event fired whenever offset changes. onScroll is just an alias for offset.onChange  */
 	@property ref Signal!(ChangeEvent!Point) onScroll() { return _offset.onChange; }
@@ -119,6 +119,15 @@ class ViewPort : Component {
 		al_set_clipping_rectangle(ocx, ocy, ocw, och);
 	}
 
+	override void calculateRecursive(Rectangle parentRect) {
+		applyLayout(parentRect);
+
+		const size = scrollable.getPreferredSize();
+		scrollable.setRelative(x, y, 0, 0, size.x, size.y, LayoutRule.BEGIN, LayoutRule.BEGIN);
+		const newParentRect = Rectangle(0, 0, size.x, size.y);
+
+		scrollable.calculateRecursive(newParentRect);
+	}
 }
 
 class Slider : Component

@@ -263,16 +263,26 @@ class MainLoop
 	private Component[] entered = [];
 	private bool capture = false;
 
-	Component findComponentAt(in Point cursor) {
-		
+	struct TargetComponent {
+		Component component;
+		Point offset;
+	}
+
+	TargetComponent findComponentAt(in Point _cursor) {
 		Component comp = rootComponent;
+		Point offset = Point(0);
+		Point cursor = _cursor;
+
 		bool goDeeper = true;
 		while (goDeeper) {
 			bool match = false;
+			if (comp.offset != Point(0)) {
+				offset += comp.offset;
+				cursor += comp.offset;
+			}
 			foreach (child; retro(comp.children)) {
 				if (child.killed || child.hidden) continue;
 
-				// TODO also take into account scrollbars, viewports & offsets
 				if (child.contains(cursor)) {
 					match = true;
 					comp = child;
@@ -283,7 +293,7 @@ class MainLoop
 				goDeeper = false;
 			}
 		}
-		return comp;
+		return TargetComponent(comp, offset);
 	}
 
 	private void advanceFocus() {
@@ -295,17 +305,18 @@ class MainLoop
 
 	void dispatchMouseEvent(ALLEGRO_EVENT event) {
 		Point cursor = Point(event.mouse.x, event.mouse.y);
-		Component targetComponent;
+		TargetComponent target;
 		
 		if (capturedComponent) {
-			targetComponent = capturedComponent;
+			//TODO: if capturedComponent is at some offset, the offset gets lost here...
+			target = TargetComponent(capturedComponent, Point(0));
 		}
 		else {
-			targetComponent = findComponentAt(cursor);
+			target = findComponentAt(cursor);
 			
 			// update stack of entered components, and send leave events as appropriate.
 			while (!entered.empty) {
-				if (entered[$-1] == targetComponent) {
+				if (entered[$-1] == target.component) {
 					break;
 				}
 				else {
@@ -316,9 +327,9 @@ class MainLoop
 			}
 
 			// send enter events as appropriate
-			if (entered.empty || entered[$-1] != targetComponent) {
-				targetComponent.onMouseEnter();
-				entered ~= targetComponent;
+			if (entered.empty || entered[$-1] != target.component) {
+				target.component.onMouseEnter();
+				entered ~= target.component;
 			}
 		}
 
@@ -326,15 +337,15 @@ class MainLoop
 			case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
 			{
 				// offer focus to target component when clicking
-				if (!targetComponent.focused && targetComponent.canFocus) {
-					focus(targetComponent);
+				if (!target.component.focused && target.component.canFocus) {
+					focus(target.component);
 				}
-				targetComponent.onMouseDown(cursor);
+				target.component.onMouseDown(cursor + target.offset);
 				break;
 			}
 			case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
 			{
-				targetComponent.onMouseUp(cursor);
+				target.component.onMouseUp(cursor + target.offset);
 				if (capturedComponent !is null) {
 					capturedComponent = null; // capture always ends on button release
 				}
@@ -342,7 +353,7 @@ class MainLoop
 			}
 			case ALLEGRO_EVENT_MOUSE_AXES:
 			{
-				targetComponent.onMouseMove(cursor);
+				target.component.onMouseMove(cursor + target.offset);
 				break;
 			}
 			default: assert(false);
@@ -361,21 +372,13 @@ class MainLoop
 
 	void calculateLayout(Component c = null) {
 
-		void calculateRecursive(Component comp, Rectangle parentRect, int depth = 0) {
-			comp.applyLayout(parentRect);
-			// writeln(" ".rep(depth), comp.type, " ", comp.classinfo, " ", comp.shape);
-			foreach(child; comp.children) {
-				calculateRecursive(child, comp.shape, depth + 1);
-			}
-		}
-
 		if (c is null) {
 			Rectangle displayRect = Rectangle(0, 0, display.al_get_display_width, display.al_get_display_height);
-			calculateRecursive(rootComponent, displayRect);
+			rootComponent.calculateRecursive(displayRect);
 		}
 		else {
 			foreach(child; c.children) {
-				calculateRecursive(child, c.shape, 0);
+				child.calculateRecursive(c.shape);
 			}
 		}
 	}
