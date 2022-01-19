@@ -27,6 +27,7 @@ import std.conv;
 class GraphicsContext
 {
 	Rectangle area;
+	Point offset;
 }
 
 enum SizeRule {
@@ -121,8 +122,13 @@ class Component
 		text = value;
 	}
 
-	final void addChild(Component c) {
+	final void add(Component c) {
 		children ~= c;
+	}
+
+	// TODO: Deprecated -> use add()
+	final void addChild(Component c) {
+		add(c);
 	}
 
 	final void clearChildren() {
@@ -145,7 +151,7 @@ class Component
 	}
 
 	/** calculate shape for this component. Non-recursive. */
-	final void applyLayout(Rectangle parentRect) {
+	void applyLayout(Rectangle parentRect) {
 		// TODO - can this be done at the "layoutData" level? It doesn't have access to preferredSize... Pass as lazy parameter?
 		if (sizeRule == SizeRule.AUTO) {
 			const p = getPreferredSize();
@@ -167,22 +173,6 @@ class Component
 	// designed for overriding
 	protected int calculateHeight(int width) {
 		return 0;
-	}
-
-	private Model!Point _offset;
-	@property Point offset() const { return _offset.dup(); }
-
-	/** event fired whenever offset changes. onScroll is just an alias for offset.onChange  */
-	@property ref Signal!(ChangeEvent!Point) onScroll() { return _offset.onChange; }
-
-	final void setOffsetY(double value) {
-		const oldVal = _offset.get(); 
-		_offset.set(Point(oldVal.x, to!int(value)));
-	}
-	
-	final void setOffsetX(double value) { 
-		const oldVal = _offset.get(); 
-		_offset.set(Point(to!int(value), oldVal.y));
 	}
 
 	// designed for overriding
@@ -273,7 +263,7 @@ class Component
 		set both position and size together 
 		@deprecated use layoutData instead.
 	*/
-	public final void setShape (int _x, int _y, int _w, int _h)
+	public final void setShape(int _x, int _y, int _w, int _h)
 	{
 		setRelative(_x, _y, 0, 0, _w, _h, LayoutRule.BEGIN, LayoutRule.BEGIN);
 	}

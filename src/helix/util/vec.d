@@ -120,6 +120,8 @@ struct vec(int N, V) {
 		return result.idup;
 	}
 
+	// natural sort order: sort by highest coordinate first. So sort by y, then x
+	// useful for ordered sets & applying 'uniq' algorithm
 	// use "auto ref const" to allow Lval and Rval here.
 	int opCmp()(auto ref const vec!(N, V) s) const {
 		for(int i = N - 1; i >= 0; --i) {

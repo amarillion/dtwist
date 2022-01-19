@@ -8,7 +8,6 @@ import helix.util.vec;
 import helix.mainloop;
 import helix.signal;
 import helix.color;
-import helix.scroll;
 
 import std.conv;
 
@@ -16,15 +15,8 @@ import allegro5.allegro;
 import allegro5.allegro_primitives;
 
 // TODO: generic grid view that can be used for tables as well?
-class TilemapView : Component, Scrollable {
+class TilemapView : Component {
 
-	//TODO: system should provide more help in implementing these.
-	// maybe they should be built into Component?
-	override void move(double deltax, double deltay) {}
-
-	override double getViewportWidth() { return w; }
-	override double getViewportHeight() { return h; }
-	
 	override Point getPreferredSize() const { return Point (_tileMap.pxWidth(), _tileMap.pxHeight()); }
 
 	this(MainLoop window) {
@@ -44,7 +36,7 @@ class TilemapView : Component, Scrollable {
 
 	override void draw(GraphicsContext gc) {
 		if (_tileMap is null) { return; }
-		Point ofst = Point(-x, -y) + offset;
+		Point ofst = Point(-x, -y) + gc.offset;
 		draw_tilemap(_tileMap, shape, ofst);
 		
 		Point px1 = (cursor * _tileMap.tilelist.tileSize) - ofst;
@@ -53,7 +45,7 @@ class TilemapView : Component, Scrollable {
 	}
 
 	override void onMouseDown(Point p) {
-		const ofst = Point(-x, -y) + offset;
+		const ofst = Point(-x, -y); //TODO + offset;
 		Point mp = (p + ofst) / _tileMap.tilelist.tileSize;
 		if (_tileMap.layers[0].inRange(mp)) {
 			cursor = mp;

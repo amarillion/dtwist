@@ -89,7 +89,7 @@ void main()
         al_init();
 		auto mainloop = new MainLoop();		
 		mainloop.init();
-		mainloop.styles.apply(parseJSON(`{ 
+		mainloop.styles.applyString(`{ 
 			"body": { "background": "steelblue" },
 			"textinput": { 
 				"background": "white", 
@@ -101,7 +101,7 @@ void main()
 				"cursor-color": "red",
 				"blinkrate": 10,
 			}
-		}`));
+		}`);
 		auto engine = new Engine(mainloop);
 		mainloop.addState("MainState", engine);
 		mainloop.switchState("MainState");

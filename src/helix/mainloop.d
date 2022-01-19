@@ -48,13 +48,6 @@ import helix.allegro.config;
 	'MainLoop' could be renamed to 'Window'.
 */
 
-enum defaultRootStyleData = parseJSON(`{
-	"font": "builtin_font", 
-	"font-size": 17, 
-	"color": "white", 
-	"background": "transparent" 
-}`);
-		
 class MainLoop
 {
 	ResourceManager resources;
@@ -301,7 +294,6 @@ class MainLoop
 	Component focusComponent;
 
 	void dispatchMouseEvent(ALLEGRO_EVENT event) {
-		
 		Point cursor = Point(event.mouse.x, event.mouse.y);
 		Component targetComponent;
 		
@@ -371,7 +363,7 @@ class MainLoop
 
 		void calculateRecursive(Component comp, Rectangle parentRect, int depth = 0) {
 			comp.applyLayout(parentRect);
-			// writeln(" ".rep(depth), comp.type, " ", comp.classinfo, " ", comp.shape, " from ", comp.layoutData);
+			// writeln(" ".rep(depth), comp.type, " ", comp.classinfo, " ", comp.shape);
 			foreach(child; comp.children) {
 				calculateRecursive(child, comp.shape, depth + 1);
 			}

@@ -115,16 +115,12 @@ void draw_tilemap(TileMap tilemap, Rectangle shape, Point viewPos = Point(0), in
 	// void teg_partdraw (const TEG_MAP* map, int layer, int cx, int cy, int cw, int ch, int xview, int yview)
 
 	int ox, oy, ow, oh;
-	int cx = shape.x;
-	int cy = shape.y;
-	int cw = shape.w;
-	int ch = shape.h;
-
-
+	
 	// TODO: setting clipping should maybe be built into the Component system...
 	al_get_clipping_rectangle(&ox, &oy, &ow, &oh);
 
-	al_set_clipping_rectangle(cx, cy, cw, ch);
+	Rectangle area = shape.intersection(Rectangle(ox, oy, ow, oh));
+	al_set_clipping_rectangle(area.x, area.y, area.w, area.h);
 	
 	const tileSize = Point(tilemap.tilelist.tilew, tilemap.tilelist.tileh);
 	foreach (tilePos; PointRange(tilemap.layers[layer].size)) {

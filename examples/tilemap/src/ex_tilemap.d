@@ -57,7 +57,7 @@ class Engine : Component {
 		tmv.cursor.onChange.add((e) { lblCursor.text = labelFormatter(e.newValue); });
 
 		//TODO: hide / show scrollbars automatically
-		sp = new ScrollPane (window, tmv);
+		sp = new ScrollPane(window, tmv);
 		sp.setRelative(16, 16, 16, 64, 0, 0, LayoutRule.STRETCH, LayoutRule.STRETCH);
 		addChild (sp);
 	}	
@@ -77,7 +77,7 @@ void main()
 		mainloop.resources.addFile("data/tiles.png");
 		mainloop.resources.addFile("data/level4-tiled.json");
 
-		mainloop.styles.apply("style");
+		mainloop.styles.applyResource("style");
 
 		mainloop.addState("MainState", new Engine(mainloop));
 		mainloop.switchState("MainState"); //TODO: shoud automatically switch state if there is only one.

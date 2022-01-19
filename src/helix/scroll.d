@@ -4,9 +4,11 @@ import helix.component;
 import helix.color;
 import helix.mainloop;
 import helix.util.vec;
+import helix.util.rect;
 import helix.layout;
 import helix.widgets;
 import helix.signal;
+static import helix.util.math;
 
 import std.stdio;
 import std.algorithm;
@@ -14,42 +16,30 @@ import std.conv;
 
 import allegro5.allegro;
 
-/**
-A scrollable is a component that is only partially shown, with scrollbars on the side.
-Any component that implements the scrollable interface can be added to a scrollpane. 
-
-A scrollable is also the model, i.e. the autoritative source, for scrolling positions.
-*/
-interface Scrollable
-{
-	public void move(double deltax, double deltay);
-	public double getViewportWidth();
-	public double getViewportHeight();
-}
-
 class ScrollPane : Component
 {
 	ScrollBar sbh, sbv;
-	
-	this(MainLoop window, Scrollable child) {
+	ViewPort vp;
+
+	this(MainLoop window, Component _scrollable) {
 		super(window, "scrollpane");
 
-		sbh = new ScrollBar(window, ScrollBar.Orientation.HORIZONTAL);
-		sbh.setScrollable(child);
+		vp = new ViewPort(window);
+		vp.setRelative(0,0,16,16,0,0,LayoutRule.STRETCH,LayoutRule.STRETCH);
+		vp.setScrollable(_scrollable);
+		addChild(vp);
+
+		sbh = new ScrollBar(window, ScrollBar.Orientation.HORIZONTAL, vp);
+		sbh.setScrollable(_scrollable);
 		sbh.setRelative(0,0,16,0,16,16,LayoutRule.STRETCH,LayoutRule.END);
 		addChild(sbh);
 
-		sbv = new ScrollBar(window, ScrollBar.Orientation.VERTICAL);
-		sbv.setScrollable(child);
+		sbv = new ScrollBar(window, ScrollBar.Orientation.VERTICAL, vp);
+		sbv.setScrollable(_scrollable);
 		sbv.setRelative(0,0,0,16,16,16,LayoutRule.END,LayoutRule.STRETCH);
 		addChild(sbv);
-		
-		//TODO: make cast unnecessary
-		auto childComponent = (cast(Component)child);
 
-		childComponent.setRelative (0,0,16,16,0,0,LayoutRule.STRETCH,LayoutRule.STRETCH);
-		addChild(childComponent);
-		childComponent.onResize.add((e) { 
+		_scrollable.onResize.add((e) { 
 			if (e.newValue.w != e.oldValue.w) {
 				sbh.updateSliderSize();
 			}
@@ -57,7 +47,8 @@ class ScrollPane : Component
 				sbv.updateSliderSize();
 			}
 		});
-		childComponent.onScroll.add((e) { 
+
+		vp.onScroll.add((e) { 
 			const delta = e.newValue - e.oldValue;
 			if (delta.x != 0) {
 				sbh.updateSliderSize();
@@ -67,6 +58,67 @@ class ScrollPane : Component
 			}
 		});
 	}
+
+}
+
+class ViewPort : Component {
+
+	public void move (double deltax, double deltay) {
+		int viewx = offset.x + cast(int)(deltax);
+		viewx = helix.util.math.bound(0, viewx, cast(int)(scrollable.getPreferredSize().x - w));
+		setOffsetX(viewx);
+
+		int viewy = offset.y + cast(int)(deltay);
+		viewy = helix.util.math.bound(0, viewy, cast(int)(scrollable.getPreferredSize().y - h));
+		setOffsetY(viewy);
+	}
+
+	private Model!Point _offset;
+	@property Point offset() const { return _offset.dup(); }
+
+	/** event fired whenever offset changes. onScroll is just an alias for offset.onChange  */
+	@property ref Signal!(ChangeEvent!Point) onScroll() { return _offset.onChange; }
+
+	final void setOffsetY(double value) {
+		const oldVal = _offset.get(); 
+		_offset.set(Point(oldVal.x, to!int(value)));
+	}
+	
+	final void setOffsetX(double value) { 
+		const oldVal = _offset.get(); 
+		_offset.set(Point(to!int(value), oldVal.y));
+	}
+
+	this(MainLoop window) {
+		super(window, "viewport");
+	}
+
+	void setScrollable(Component value) {
+		if (scrollable != value) {
+			scrollable = value;
+			clearChildren();
+			addChild(scrollable);
+		}
+	}
+	
+	private Component scrollable;
+
+	override void draw(GraphicsContext gc) {
+		int ocx, ocy, ocw, och;
+		al_get_clipping_rectangle(&ocx, &ocy, &ocw, &och);
+
+		Rectangle clientRect = shape;
+		al_set_clipping_rectangle (clientRect.x, clientRect.y, clientRect.w, clientRect.h);
+
+		GraphicsContext gc2 = new GraphicsContext();
+		gc2.area = gc.area;
+		gc2.offset = offset;
+
+		scrollable.draw(gc2);
+
+		al_set_clipping_rectangle(ocx, ocy, ocw, och);
+	}
+
 }
 
 class Slider : Component
@@ -152,31 +204,23 @@ class ScrollBar : Component
 	private Component bDec;
 	private Component bInc;
 	private Slider slider;
-	
-	Orientation orientation;
-	
-	this(MainLoop window) {
-		super(window, "slider");
+	private ViewPort vp;
 
-		onResize.add(e => updateSliderSize());
-	}
+	Orientation orientation;
 	
 	private void updateSliderSize()
 	{
 		double sliderSize = min_slider_size, pos = 0;
 		double offset, viewportsize, preferredsize, sliderarea;
 		
-		// TODO: get rid of cast
-		Component scrollableComponent = cast(Component)scrollable;
-		
 		if (orientation == Orientation.HORIZONTAL)
 		{
 			sliderarea = (w - (2 * short_side));
 			if (scrollable)
 			{
-				offset = scrollableComponent.offset.x;
-				viewportsize = scrollable.getViewportWidth();
-				preferredsize = scrollableComponent.getPreferredSize().x;
+				offset = vp.offset.x;
+				viewportsize = vp.w;
+				preferredsize = scrollable.getPreferredSize().x;
 			}
 		}
 		else
@@ -184,16 +228,16 @@ class ScrollBar : Component
 			sliderarea = (h - (2 * short_side));
 			if (scrollable)
 			{
-				offset = scrollableComponent.offset.y;
-				viewportsize = scrollable.getViewportHeight();
-				preferredsize = scrollableComponent.getPreferredSize().y;
+				offset = vp.offset.y;
+				viewportsize = vp.h;
+				preferredsize = scrollable.getPreferredSize().y;
 			}
 		}
 		
 		if (scrollable)
 		{
 			// if viewportsize is too high, or preferredsize is 0, the fraction will be 1. 
-			double fraction = (preferredsize == 0) ? 1 : min (1.0, viewportsize / preferredsize);
+			double fraction = (preferredsize == 0) ? 1 : min(1.0, viewportsize / preferredsize);
 			
 			sliderSize = max(min_slider_size, sliderarea * fraction);
 			
@@ -202,14 +246,14 @@ class ScrollBar : Component
 		}
 		
 		if (orientation == Orientation.HORIZONTAL) {
-			slider.setRelative(to!int(short_side + pos), 0, 0, 0, to!int(sliderSize), 16, LayoutRule.BEGIN, LayoutRule.BEGIN);
+			slider.setRelative(to!int(short_side + pos), 0, 0, 0, to!int(sliderSize), 0, LayoutRule.BEGIN, LayoutRule.STRETCH);
 			window.calculateLayout(this); //TODO: can this be triggered automatically?
 			slider.rangeMin = x + short_side;
 			slider.rangeMax = x + w - short_side;
 		}
 		else
 		{
-			slider.setRelative(0, to!int(short_side + pos), 0, 0, 16, to!int(sliderSize), LayoutRule.BEGIN, LayoutRule.BEGIN);
+			slider.setRelative(0, to!int(short_side + pos), 0, 0, 0, to!int(sliderSize), LayoutRule.STRETCH, LayoutRule.BEGIN);
 			window.calculateLayout(this); //TODO: can this be triggered automatically?
 			slider.rangeMin = y + short_side;
 			slider.rangeMax = y + h - short_side;
@@ -219,8 +263,10 @@ class ScrollBar : Component
 	private double short_side;
 	private double min_slider_size;
 	
-	this(MainLoop window, Orientation _orientation) {
+	this(MainLoop window, Orientation _orientation, ViewPort _vp) {
 		super(window, "scrollbar");
+
+		vp = _vp;
 		short_side = getStyle().getNumber("size");
 
 		//TODO: should this indrect style lookup be allowed?
@@ -252,7 +298,7 @@ class ScrollBar : Component
 		}
 		slider = new Slider(window, orientation);
 		slider.onSliderPositionChanged.add(e => onSliderPositionChanged(e));
-		updateSliderSize();
+		onResize.add((e) { updateSliderSize(); });
 		addChild(bDec);
 		addChild(bInc);
 		addChild(slider);
@@ -262,21 +308,18 @@ class ScrollBar : Component
 	{
 		if (!scrollable) return;
 		
-		// TODO: get rid of cast
-		Component scrollableComponent = (cast(Component)scrollable);
-
 		switch (orientation)
 		{
 			case Orientation.VERTICAL:
 			{
-				const offset = fraction * (scrollableComponent.getPreferredSize().x - scrollable.getViewportHeight());
-				scrollableComponent.setOffsetY(offset);
+				const offset = fraction * (scrollable.getPreferredSize().y - vp.h);
+				vp.setOffsetY(offset);
 			}
 			break;
 			case Orientation.HORIZONTAL:
 			{
-				const offset = fraction * ((cast(Component)scrollable).getPreferredSize().y - scrollable.getViewportWidth());
-				scrollableComponent.setOffsetX(offset);
+				const offset = fraction * (scrollable.getPreferredSize().x - vp.w);
+				vp.setOffsetX(offset);
 			}
 			break;
 			default: assert(false);
@@ -285,20 +328,14 @@ class ScrollBar : Component
 	
 	void onMove(double deltax, double deltay)
 	{
-		if (scrollable) 
-		{
-			scrollable.move (deltax, deltay);
-		}
+		vp.move (deltax, deltay);
 	}
 	
-	private Scrollable scrollable;
+	private Component scrollable;
 	
-	void setScrollable (Scrollable value)
+	void setScrollable(Component value)
 	{
 		scrollable = value;
 		updateSliderSize();
 	}
-	
-	private ALLEGRO_COLOR bg;
-	
 }

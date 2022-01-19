@@ -78,9 +78,43 @@ private enum rootStyleData = parseJSON(`{
 	"b": {
 		"color": "red"
 	},
-
 	"i": {
 		"color": "white"
+	},
+	"scrollpane": {
+		"background": "#333333"
+	},
+	"scrollbar": {
+		"size": 16,
+		"background": "#666666"
+	},
+	"slider": {
+		"min-size": 8,
+		"background": "#BBBBBB", 
+		"border": "#888888", 
+		"border-left": "#DDDDDD", 
+		"border-top": "#DDDDDD", 
+		"border-width": 2.0, 
+	},
+	"slider[selected]": {
+		"background": "#999999", 
+		"border": "#888888", 
+		"border-right": "#DDDDDD", 
+		"border-bottom": "#DDDDDD", 
+	},
+	"slider[hover]": {
+		"background": "#9999BB", 
+		"border": "#888888", 
+		"border-left": "#DDDDDD", 
+		"border-top": "#DDDDDD" 
+	},
+
+	"list": {
+		"color": "#FFFFFF",
+		"background": "#444444"
+	},
+	"list[selected]": {
+		"color": "#00FF00"
 	}
 }
 `);
@@ -237,15 +271,26 @@ class StyleManager {
 		al_set_target_bitmap(saved);
 	}
 
-	void apply(JSONValue jsonData) {
-		themeStyleBySelector = parseStyling(jsonData);
+	void applyJson(JSONValue jsonData) {
+		StyleData[string] styling = parseStyling(jsonData);
+		foreach(k, v; styling) {
+			themeStyleBySelector[k] = v;
+		}
 	}
 
-	void apply(string resourceKey) {
-		apply(resources.getJSON(resourceKey));
+	void applyResource(string resourceKey) {
+		applyJson(resources.getJSON(resourceKey));
 	}
 
-	private StyleData[string] parseStyling(JSONValue styleMap) {
+	void applyString(string jsonText) {
+		applyJson(parseJSON(jsonText));
+	}
+
+	void applyDefaultStyle(string jsonText) {
+		themeStyleBySelector["root"] = StyleData.fromJSON("root", parseJSON(jsonText));
+	}
+
+	private static StyleData[string] parseStyling(JSONValue styleMap) {
 		StyleData[string] result;
 
 		foreach (k, v; styleMap.object) {
