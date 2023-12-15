@@ -1,0 +1,14 @@
+{
+	"name" : "dtwist",
+	"description" : "Twist engine",
+	"dependencies" : {
+		"allegro" : "4.0.4+5.2.0.commit.1.g672310c"
+	},
+	"subConfigurations" : {
+		"allegro" : "all-addons"
+	},
+	"sourcePaths" : [
+		"src"
+	],
+	"targetType" : "library"
+}

@@ -1,1 +1,3 @@
 .dub/
+libdtwist.a
+__test__library__
