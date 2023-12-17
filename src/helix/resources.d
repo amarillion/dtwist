@@ -9,6 +9,7 @@ import std.json;
 import std.stdio;
 import std.format : format;
 import std.string : toStringz;
+import std.file : readText;
 import helix.allegro.bitmap;
 import helix.allegro.sample;
 import helix.allegro.audiostream;
@@ -152,7 +153,7 @@ class ResourceManager
 	public ResourceMap!Bitmap bitmaps;
 	public ResourceMap!Sample samples;
 	public ResourceMap!AudioStream music;
-
+	public ResourceMap!string shaders;
 	private JSONValue[string] jsons;
 	
 	private JSONValue loadJson(string filename) {
@@ -184,6 +185,11 @@ class ResourceManager
 		else if (ext == ".ogg") {
 			Sample sample = Sample.load(filename);
 			samples.put(base, sample);
+		}
+		else if (ext == ".glsl") {
+			// TODO use allegro file routines to allow loading via physfs...
+			string txt = readText(filename);
+			shaders.put(base, txt);
 		}
 	}
 	
