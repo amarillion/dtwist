@@ -155,7 +155,10 @@ class MainLoop
 		const DEFAULT_WINDOW_HEIGHT = 675;
 
 		Rectangle windowPos = determineWindowPosition(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-		al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE);
+		al_set_new_display_flags(
+			ALLEGRO_WINDOWED | ALLEGRO_RESIZABLE | 
+			ALLEGRO_PROGRAMMABLE_PIPELINE | ALLEGRO_OPENGL // both flags needed for GLSL shaders
+		);
 		al_set_new_window_position(windowPos.x, windowPos.y);
 		display = al_create_display(windowPos.w, windowPos.h);
 		queue = al_create_event_queue();
