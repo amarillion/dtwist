@@ -48,6 +48,43 @@ import helix.allegro.config;
 	'MainLoop' could be renamed to 'Window'.
 */
 
+class MainConfig {
+	
+	private this() {}
+	static MainConfig of() {
+		return new MainConfig();
+	}
+
+	private string _appName = "anonymous_twist_app";
+	string appName() { return _appName; }
+	MainConfig appName(string value) {
+		this._appName = value;
+		return this;
+	}
+	
+	private int _targetFps = 60;
+	int targetFps() { return _targetFps; }
+	MainConfig targetFps(int value) {
+		this._targetFps = value;
+		return this;
+	}
+	
+	private string _orgName = "helixsoft.nl";
+	string orgName() { return _orgName; }
+	MainConfig orgName(string value) {
+		this._orgName = value;
+		return this;
+	}
+
+	private string _iniFile = "twist.ini";
+	string iniFile() { return _iniFile; }
+	MainConfig iniFile(string value) {
+		this._iniFile = value;
+		return this;
+	}
+
+}
+
 class MainLoop
 {
 	ResourceManager resources;
@@ -87,9 +124,10 @@ class MainLoop
 
 */
 	
-	string appname;
-	this(string appname = "anonymous_twist_app") {
-		this.appname = appname;
+	private MainConfig appConfig;
+
+	this(MainConfig appConfig) {
+		this.appConfig = appConfig;
 	}
 
 	/** use config, monitor size and defaults */
@@ -116,8 +154,8 @@ class MainLoop
 
 	void init()
 	{
-		al_set_app_name(toStringz(appname));
-		al_set_org_name(toStringz("helixsoft.nl"));
+		al_set_app_name(toStringz(appConfig.appName));
+		al_set_org_name(toStringz(appConfig.orgName));
 
 		localAppData = al_get_standard_path(ALLEGRO_USER_SETTINGS_PATH);
 
@@ -127,7 +165,7 @@ class MainLoop
 		}
 
 		configPath = al_clone_path(localAppData);
-		al_set_path_filename(configPath, toStringz("twist.ini"));
+		al_set_path_filename(configPath, toStringz(appConfig.iniFile));
 
 		config = al_load_config_file (al_path_cstr(configPath, ALLEGRO_NATIVE_PATH_SEP));
 
@@ -169,7 +207,7 @@ class MainLoop
 		
 		al_show_mouse_cursor(display);
 		
-  		timer = al_create_timer(0.1);
+  		timer = al_create_timer(1.0 / appConfig.targetFps);
 		al_register_event_source(queue, al_get_timer_event_source(timer));
 		al_start_timer(timer);
 
