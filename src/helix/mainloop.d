@@ -126,7 +126,7 @@ class MainLoop
 	
 	private MainConfig appConfig;
 
-	this(MainConfig appConfig) {
+	this(MainConfig appConfig = new MainConfig()) {
 		this.appConfig = appConfig;
 	}
 

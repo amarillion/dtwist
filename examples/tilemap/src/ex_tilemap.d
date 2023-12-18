@@ -67,7 +67,7 @@ void main()
 {	
 	al_run_allegro({
 		al_init();
-		auto mainloop = new MainLoop("ex_tilemap");
+		auto mainloop = new MainLoop(MainConfig.of.appName("ex_tilemap").targetFps(30));
 		mainloop.init();
 		
 		//TODO: glob
