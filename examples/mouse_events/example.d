@@ -34,7 +34,7 @@ void main()
 	al_run_allegro({
 
 		al_init();
-		auto mainloop = new MainLoop("mouse_events_example");
+		auto mainloop = new MainLoop(MainConfig.of.appName("mouse_events_example"));
 		mainloop.init();
 		
 		writefln("%s", mainloop.styles.getStyle("button"));
