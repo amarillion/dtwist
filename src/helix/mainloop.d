@@ -461,13 +461,18 @@ class MainLoop
 		capturedComponent = c;
 	}
 
+	private Component currentState = null;
+
 	/**
 		Switches the complete scene to a new Scene
 	*/
 	void switchState(string name) {
 		enforce(name in states);
-		rootComponent.clearChildren();
-		rootComponent.addChild(states[name]);
+		if (currentState) {
+			rootComponent.removeChild(currentState);
+		}
+		currentState = states[name];
+		rootComponent.addChild(currentState);
 		calculateLayout();
 	}
 
@@ -476,7 +481,9 @@ class MainLoop
 	}
 
 	/** add a scene at the root level. 
-		Useful for dialogs (modal and non-modal)  */
+		Useful for dialogs (modal and non-modal)
+		These dialogs are not part of the state.
+	*/
 	void pushScene(Component scene, bool modal = true) {
 		rootComponent.addChild(scene);
 		calculateLayout();

@@ -126,6 +126,10 @@ class Component
 		children ~= c;
 	}
 
+	final void removeChild(Component c) {
+		children = children.filter!(i => i != c).array;
+	}
+
 	// TODO: Deprecated -> use add()
 	final void addChild(Component c) {
 		add(c);
