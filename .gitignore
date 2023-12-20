@@ -1,3 +1,3 @@
 .dub/
 libdtwist.a
-__test__library__
+dtwist-test-library
