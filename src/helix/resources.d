@@ -14,10 +14,10 @@ import helix.allegro.bitmap;
 import helix.allegro.sample;
 import helix.allegro.audiostream;
 import helix.allegro.font;
+import helix.signal;
 
 /*
-struct ResourceHandle(T)
-{
+struct ResourceHandle(T) {
 	string fname;
 	Signal onReload;
 	T resource;
@@ -33,40 +33,14 @@ struct ResourceHandle(T)
 	}
 
 	reload(fname) {
+	}
+
+	// check if given file resource is out-of-date
+	refresh() {
 
 	}
 }
-
 */
-
-/**
-ResourceMap is a wrapper for resource handles.
-It has ownership of the given resources, and ensures they are destroyed in time.
-
-This is a struct instead of a class so that it is destroyed at the same time as ResourceManager.
-
-Note that it's important that resource managers explicitly invoke destructors of handled objects. If we rely on GC, 
-they may not be destroyed before uninstall_system is called, and then the system crashes.
-*/
-struct ResourceMap(T) {
-	private T[string] data;
-
-	void put(string key, T value) {
-		data[key] = value;
-	}
-
-	auto opIndex(string key) {
-		assert (key in data, format("There is no resource named [%s]", key));
-		return data[key];
-	}
-
-	~this() {
-		foreach (f; data) {
-			destroy(f);
-		}
-		data = null;
-	}
-}
 
 unittest {
 	//TODO, make it like this: 
@@ -87,7 +61,37 @@ unittest {
 	
 	resources.refreshAll();
 	*/
+}
 
+// Dummy implementations to make generic code compile
+void refresh(Bitmap) {}
+void refresh(Sample) {}
+void refresh(AudioStream) {}
+
+struct FileInfo {
+
+	import core.stdc.time : time_t;
+
+	this(string filename) {
+		this.filename = filename;
+		update();
+	}
+
+	bool isRecentlyModified() const {
+		ALLEGRO_FS_ENTRY *entry = al_create_fs_entry(toStringz(filename));
+		time_t newLastModified = al_get_fs_entry_mtime(entry);
+		al_destroy_fs_entry(entry);
+		return (newLastModified > this.lastModified);
+	}
+
+	void update() {
+		ALLEGRO_FS_ENTRY *entry = al_create_fs_entry(toStringz(filename));
+		lastModified = al_get_fs_entry_mtime(entry);
+		al_destroy_fs_entry(entry);
+	}
+
+	string filename;
+	time_t lastModified;
 }
 
 class ResourceManager
@@ -98,6 +102,43 @@ class ResourceManager
 
 	interface FontWrapper {
 		Font get(int size = 12);
+		final void refresh() {}
+	}
+
+	/**
+	ResourceMap is a wrapper for resource handles.
+	It has ownership of the given resources, and ensures they are destroyed in time.
+
+	This is a struct instead of a class so that it is destroyed at the same time as ResourceManager.
+
+	Note that it's important that resource managers explicitly invoke destructors of handled objects. If we rely on GC, 
+	they may not be destroyed before uninstall_system is called, and then the system crashes.
+	*/
+	struct ResourceMap(T) {
+		private T[string] data;
+
+		void put(string key, T value) {
+			data[key] = value;
+		}
+
+		auto opIndex(string key) {
+			assert (key in data, format("There is no resource named [%s]", key));
+			return data[key];
+		}
+
+		~this() {
+			foreach (f; data) {
+				destroy(f);
+			}
+			data = null;
+		}
+
+		void refresh() {
+			// check all resources for being out-of-date...
+			foreach (f; data) {
+				f.refresh();
+			}
+		}
 	}
 
 	/**
@@ -153,7 +194,7 @@ class ResourceManager
 	public ResourceMap!Bitmap bitmaps;
 	public ResourceMap!Sample samples;
 	public ResourceMap!AudioStream music;
-	public ResourceMap!string shaders;
+	public ResourceMap!GlslLoader shaders;
 	private JSONValue[string] jsons;
 	
 	private JSONValue loadJson(string filename) {
@@ -165,6 +206,35 @@ class ResourceManager
 		// TODO: find streaming parser to support large files
 		JSONValue result = parseJSON(buffer);
 		return result;
+	}
+
+	class GlslLoader {
+		string fname;
+		FileInfo finfo;
+		Signal!void onReload;
+		string resource;
+
+		this(string fname) {
+			this.fname = fname;
+			finfo = FileInfo(fname);
+		}
+
+		string get() { return resource; }
+		
+		alias get this; // automatic converstion to the GLSL source
+
+		void load() {
+			resource = readText(fname);
+		}
+
+		// check if given file resource is out-of-date
+		void refresh() {
+			if (finfo.isRecentlyModified()) {
+				finfo.update();
+				load();
+				onReload.dispatch();
+			}
+		}
 	}
 
 	public void addFile(string filename)
@@ -188,8 +258,9 @@ class ResourceManager
 		}
 		else if (ext == ".glsl") {
 			// TODO use allegro file routines to allow loading via physfs...
-			string txt = readText(filename);
-			shaders.put(base, txt);
+			GlslLoader loader = new GlslLoader(filename);
+			loader.load();
+			shaders.put(base, loader);
 		}
 	}
 	
@@ -208,4 +279,8 @@ class ResourceManager
 		return jsons[name];
 	}
 
+	void refreshAll() {
+		//TODO: loop over all resource maps, not just the one...
+		shaders.refresh();
+	}
 }

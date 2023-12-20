@@ -34,6 +34,8 @@ import helix.util.math;
 import helix.audio;
 import helix.allegro.config;
 
+import helix.signal;
+
 /**
 	MainLoop is responsible for:
 
@@ -216,6 +218,8 @@ class MainLoop
 		rootComponent = new RootComponent(this);
 	}
 
+	public Signal!bool onDisplaySwitch;
+
 	void run()
 	{
 		assert (!rootComponent.children.empty, "Must add & switch to a state");
@@ -280,6 +284,14 @@ class MainLoop
 						rootComponent.update();
 						need_redraw = true;
 						break;
+					case ALLEGRO_EVENT_DISPLAY_SWITCH_IN: {
+						onDisplaySwitch.dispatch(true);
+						break;
+					}
+					case ALLEGRO_EVENT_DISPLAY_SWITCH_OUT: {
+						onDisplaySwitch.dispatch(false);
+						break;
+					}
 					default:
 				}
 			}

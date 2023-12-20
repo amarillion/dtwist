@@ -2,17 +2,27 @@ module helix.signal;
 
 import helix.util.math;
 
-struct Signal(T) {
-	void delegate(T)[] listeners;
+struct Signal(T = void) {
 
-	void add(void delegate(T) f) {
-		listeners ~= f;
-	}
-
-	void dispatch(T t) {
-		foreach (f; listeners) {
-			f(t);
+	// if the template type is void, then the listener takes no parameters.
+	static if (is(T == void)) {
+		alias Listener = void delegate();
+		void dispatch() {
+			foreach (f; listeners) { f(); }
 		}
+	}
+	// otherwise it takes a single parameter.
+	else {
+		alias Listener = void delegate(T);
+		void dispatch(T t) {
+			foreach (f; listeners) { f(t); }
+		}
+	}
+	
+	Listener[] listeners;
+
+	void add(Listener f) {
+		listeners ~= f;
 	}
 
 	// TODO - removing listeners
