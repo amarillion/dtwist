@@ -42,7 +42,7 @@ class Engine : Component {
 		addChild (b1);
 
 
-		TileMap tileMap = TileMap.fromTiledJSON(window.resources.getJSON("level4-tiled"));
+		TileMap tileMap = TileMap.fromTiledJSON(window.resources.jsons["level4-tiled"]);
 		tileMap.tilelist.bmp = window.resources.bitmaps["tiles"];
 
 		tmv = new TilemapView(window);

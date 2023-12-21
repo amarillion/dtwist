@@ -16,32 +16,6 @@ import helix.allegro.audiostream;
 import helix.allegro.font;
 import helix.signal;
 
-/*
-struct ResourceHandle(T) {
-	string fname;
-	Signal onReload;
-	T resource;
-
-	this(fname) {
-		this.fname = fname;
-	}
-
-	T get()
-	
-	load(fname) {
-
-	}
-
-	reload(fname) {
-	}
-
-	// check if given file resource is out-of-date
-	refresh() {
-
-	}
-}
-*/
-
 unittest {
 	//TODO, make it like this: 
 	/*
@@ -62,11 +36,6 @@ unittest {
 	resources.refreshAll();
 	*/
 }
-
-// Dummy implementations to make generic code compile
-void refresh(Bitmap) {}
-void refresh(Sample) {}
-void refresh(AudioStream) {}
 
 struct FileInfo {
 
@@ -114,11 +83,23 @@ class ResourceManager
 	Note that it's important that resource managers explicitly invoke destructors of handled objects. If we rely on GC, 
 	they may not be destroyed before uninstall_system is called, and then the system crashes.
 	*/
-	struct ResourceMap(T) {
+	struct ResourceMap(T, alias LoadFunc) {
 		private T[string] data;
+
+		//corresponding file info. Note: generated resources have no corresponding files.
+		private FileInfo[string] files;
 
 		void put(string key, T value) {
 			data[key] = value;
+		}
+
+		void putFile(string fname) {
+			string key = baseName(stripExtension(fname));
+			// TODO Allegro log file loading...
+			// writefln("Loading type: key: %s file: %s", key, fname);
+			T value = LoadFunc(fname);
+			data[key] = value;
+			files[key] = FileInfo(fname);
 		}
 
 		auto opIndex(string key) {
@@ -133,10 +114,18 @@ class ResourceManager
 			data = null;
 		}
 
+		Signal!string onReload;
+
 		void refresh() {
-			// check all resources for being out-of-date...
-			foreach (f; data) {
-				f.refresh();
+			// check all files for being out-of-date...
+			foreach (key, fileInfo; files) {
+				if (fileInfo.isRecentlyModified()) {
+					// TODO Allegro log: file refresh...
+					fileInfo.update();
+					T value = LoadFunc(fileInfo.filename);
+					data[key] = value;
+					onReload.dispatch(key);
+				}
 			}
 		}
 	}
@@ -145,7 +134,7 @@ class ResourceManager
 		Remembers file locations.
 		For each size requested, reloads font on demand.
 	*/
-	class FontLoader : FontWrapper {
+	static class FontLoader : FontWrapper {
 		private string filename;
 		private Font[int] fonts;
 		
@@ -190,14 +179,14 @@ class ResourceManager
 		}
 	}
 
-	public ResourceMap!FontWrapper fonts;
-	public ResourceMap!Bitmap bitmaps;
-	public ResourceMap!Sample samples;
-	public ResourceMap!AudioStream music;
-	public ResourceMap!GlslLoader shaders;
-	private JSONValue[string] jsons;
+	public ResourceMap!(FontWrapper, fname => new FontLoader(fname)) fonts;
+	public ResourceMap!(Bitmap, fname => Bitmap.load(fname)) bitmaps;
+	public ResourceMap!(Sample, fname => Sample.load(fname)) samples;
+	public ResourceMap!(AudioStream, fname => null) music; //NOTE no load function, use addMusicFile instead. Due to .ogg extension overlap...
+	public ResourceMap!(string, (fname) => readText(fname)) shaders;
+	public ResourceMap!(JSONValue, ResourceManager.loadJson) jsons;
 	
-	private JSONValue loadJson(string filename) {
+	private static JSONValue loadJson(string filename) {
 		File file = File(filename, "rt");
 		char[] buffer;
 		while (!file.eof()) {
@@ -208,62 +197,29 @@ class ResourceManager
 		return result;
 	}
 
-	class GlslLoader {
-		string fname;
-		FileInfo finfo;
-		Signal!void onReload;
-		string resource;
-
-		this(string fname) {
-			this.fname = fname;
-			finfo = FileInfo(fname);
-		}
-
-		string get() { return resource; }
-		
-		alias get this; // automatic converstion to the GLSL source
-
-		void load() {
-			resource = readText(fname);
-		}
-
-		// check if given file resource is out-of-date
-		void refresh() {
-			if (finfo.isRecentlyModified()) {
-				finfo.update();
-				load();
-				onReload.dispatch();
-			}
-		}
-	}
-
 	public void addFile(string filename)
 	{
 		string ext = extension(filename); // ext includes '.'
 		string base = baseName(stripExtension(filename));
 		
 		if (ext == ".ttf") {
-			fonts.put(base, new FontLoader(filename));
+			fonts.putFile(filename);
 		}
 		else if (ext == ".png") {
-			Bitmap bmp = Bitmap.load(filename);
-			bitmaps.put(base, bmp);
+			bitmaps.putFile(filename);
 		}
 		else if (ext == ".json") {
-			jsons[base] = loadJson(filename);
+			jsons.putFile(filename);
 		}
 		else if (ext == ".ogg") {
-			Sample sample = Sample.load(filename);
-			samples.put(base, sample);
+			samples.putFile(filename);
 		}
 		else if (ext == ".glsl") {
-			// TODO use allegro file routines to allow loading via physfs...
-			GlslLoader loader = new GlslLoader(filename);
-			loader.load();
-			shaders.put(base, loader);
+			shaders.putFile(filename);
 		}
 	}
-	
+
+	/** extra load function due to .ogg extension overlap */
 	public void addMusicFile(string filename) {
 		// string ext = extension(filename); // ext includes '.'
 		string base = baseName(stripExtension(filename));
@@ -274,13 +230,9 @@ class ResourceManager
 		music.put(base, temp);
 	}
 
-	public JSONValue getJSON(string name) {
-		assert (name in jsons, format("There is no JSON named [%s]", name)); 
-		return jsons[name];
-	}
-
 	void refreshAll() {
 		//TODO: loop over all resource maps, not just the one...
 		shaders.refresh();
+		bitmaps.refresh();
 	}
 }

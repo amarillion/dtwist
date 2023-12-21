@@ -279,7 +279,7 @@ class StyleManager {
 	}
 
 	void applyResource(string resourceKey) {
-		applyJson(resources.getJSON(resourceKey));
+		applyJson(resources.jsons[resourceKey]);
 	}
 
 	void applyString(string jsonText) {
