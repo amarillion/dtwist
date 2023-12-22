@@ -89,8 +89,11 @@ class ResourceManager
 		//corresponding file info. Note: generated resources have no corresponding files.
 		private FileInfo[string] files;
 
-		void put(string key, T value) {
+		public Signal!void[string] onReload;
+
+		public void put(string key, T value) {
 			data[key] = value;
+			onReload[key] = Signal!void();
 		}
 
 		void putFile(string fname) {
@@ -100,6 +103,7 @@ class ResourceManager
 			T value = LoadFunc(fname);
 			data[key] = value;
 			files[key] = FileInfo(fname);
+			onReload[key] = Signal!void();
 		}
 
 		auto opIndex(string key) {
@@ -114,8 +118,6 @@ class ResourceManager
 			data = null;
 		}
 
-		Signal!string onReload;
-
 		void refresh() {
 			// check all files for being out-of-date...
 			foreach (key, fileInfo; files) {
@@ -124,7 +126,7 @@ class ResourceManager
 					fileInfo.update();
 					T value = LoadFunc(fileInfo.filename);
 					data[key] = value;
-					onReload.dispatch(key);
+					onReload[key].dispatch();
 				}
 			}
 		}
