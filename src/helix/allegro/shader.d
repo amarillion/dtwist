@@ -81,14 +81,33 @@ class Shader {
 		return result;
 	}
 
+	struct UniformSetter {
+		UniformSetter withFloat(string name, float value) {
+			al_set_shader_float(toStringz(name), value);
+			return this;
+		}
+
+		UniformSetter withIntVector(string name, int[] value, int width, int height) {
+			assert(width * height <= value.length);
+			al_set_shader_int_vector(toStringz(name), width, value.ptr, height);
+			return this;
+		}
+
+		UniformSetter withSampler(string name, Bitmap value, int unit = 1) {
+			al_set_shader_sampler(toStringz(name), value.ptr, unit);
+			return this;
+		}
+	}
+
 	//TODO: add facility for al_set_shader*
-	void use(bool enabled = true) {
+	UniformSetter use(bool enabled = true) {
 		if (enabled) {
 			al_use_shader(shader);
 		}
 		else {
 			al_use_shader(null);
 		}
+		return UniformSetter();
 	}
 
 }
