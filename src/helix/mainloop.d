@@ -218,7 +218,8 @@ class MainLoop
 		rootComponent = new RootComponent(this);
 	}
 
-	public Signal!bool onDisplaySwitch;
+	public Signal!bool onDisplaySwitch; // Called for ALLEGRO_DISPLAY_SWITCH_IN|OUT
+	public Signal!void onClose; // Called just before the run() method returns.
 
 	void run()
 	{
@@ -298,6 +299,7 @@ class MainLoop
 		
 		}
 
+		onClose.dispatch();
 	
 		// cleanup
 		if (configPath != null)
@@ -311,6 +313,14 @@ class MainLoop
 		audio.doneSound();
 
 		done();
+	}
+
+	// apply an action on each node in the component hiearchy
+	private void visitHierarchy(Component node, void delegate(Component) action) {
+		foreach(child; node.children) {
+			visitHierarchy(child, action);
+		}
+		action(node);
 	}
 
 	private Component[] entered = [];
