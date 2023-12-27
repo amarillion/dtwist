@@ -220,80 +220,94 @@ class MainLoop
 
 	public Signal!bool onDisplaySwitch; // Called for ALLEGRO_DISPLAY_SWITCH_IN|OUT
 	public Signal!void onClose; // Called just before the run() method returns.
+	public Signal!Exception onException;
+	public Signal!void onInit; // Called on the first iteration of the main loop. Used it e.g. to build GUI from user files that could cause exceptions.
 
 	void run()
 	{
-		assert (!rootComponent.children.empty, "Must add & switch to a state");
-		
 		bool exit = false;
 		bool need_redraw = true;
 		
+		try {
+			onInit.dispatch();
+		} 
+		catch(Exception ex) {
+			onException.dispatch(ex);
+		}
+
+		assert (!rootComponent.children.empty, "Must add & switch to a state");
+
 		while(!exit)
 		{
 			ALLEGRO_EVENT event;
 			while(!exit)
 			{
-				if (need_redraw && al_is_event_queue_empty(queue))
-				{
-					GraphicsContext gc = new GraphicsContext();
-					rootComponent.draw(gc);
+				try {
+					if (need_redraw && al_is_event_queue_empty(queue))
+					{
+						GraphicsContext gc = new GraphicsContext();
+						rootComponent.draw(gc);
 
-					al_flip_display();
-					need_redraw = false;
+						al_flip_display();
+						need_redraw = false;
+					}
+
+					al_wait_for_event(queue, &event);
+					switch(event.type)
+					{
+						case ALLEGRO_EVENT_DISPLAY_RESIZE: {
+							al_acknowledge_resize(event.display.source);
+							calculateLayout();
+							break;
+						}
+						case ALLEGRO_EVENT_DISPLAY_CLOSE: {
+							// TODO: ask for close...
+							exit = true;
+							break;
+						}
+						case ALLEGRO_EVENT_KEY_CHAR: {
+							if (focusComponent) {
+								focusComponent.onKey(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers);
+							}
+							// TODO: bubble up?
+							// TODO: global keyboard accelerators?
+							switch(event.keyboard.keycode)
+							{
+								case ALLEGRO_KEY_TAB: {
+									advanceFocus();
+									break;
+								}
+								case ALLEGRO_KEY_ESCAPE: {
+									// TODO: ask for close...
+									exit = true;
+									break;
+								}
+								default:
+							}
+							break;
+						}
+						case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+						case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
+						case ALLEGRO_EVENT_MOUSE_AXES:
+							dispatchMouseEvent(event);
+							break;
+						case ALLEGRO_EVENT_TIMER: 
+							rootComponent.update();
+							need_redraw = true;
+							break;
+						case ALLEGRO_EVENT_DISPLAY_SWITCH_IN: {
+							onDisplaySwitch.dispatch(true);
+							break;
+						}
+						case ALLEGRO_EVENT_DISPLAY_SWITCH_OUT: {
+							onDisplaySwitch.dispatch(false);
+							break;
+						}
+						default:
+					}
 				}
-
-				al_wait_for_event(queue, &event);
-				switch(event.type)
-				{
-					case ALLEGRO_EVENT_DISPLAY_RESIZE: {
-						al_acknowledge_resize(event.display.source);
-						calculateLayout();
-						break;
-					}
-					case ALLEGRO_EVENT_DISPLAY_CLOSE: {
-						// TODO: ask for close...
-						exit = true;
-						break;
-					}
-					case ALLEGRO_EVENT_KEY_CHAR: {
-						if (focusComponent) {
-							focusComponent.onKey(event.keyboard.keycode, event.keyboard.unichar, event.keyboard.modifiers);
-						}
-						// TODO: bubble up?
-						// TODO: global keyboard accelerators?
-						switch(event.keyboard.keycode)
-						{
-							case ALLEGRO_KEY_TAB: {
-								advanceFocus();
-								break;
-							}
-							case ALLEGRO_KEY_ESCAPE: {
-								// TODO: ask for close...
-								exit = true;
-								break;
-							}
-							default:
-						}
-						break;
-					}
-					case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
-					case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
-					case ALLEGRO_EVENT_MOUSE_AXES:
-						dispatchMouseEvent(event);
-						break;
-					case ALLEGRO_EVENT_TIMER: 
-						rootComponent.update();
-						need_redraw = true;
-						break;
-					case ALLEGRO_EVENT_DISPLAY_SWITCH_IN: {
-						onDisplaySwitch.dispatch(true);
-						break;
-					}
-					case ALLEGRO_EVENT_DISPLAY_SWITCH_OUT: {
-						onDisplaySwitch.dispatch(false);
-						break;
-					}
-					default:
+				catch (Exception ex) {
+					onException.dispatch(ex);
 				}
 			}
 		
@@ -490,12 +504,17 @@ class MainLoop
 	*/
 	void switchState(string name) {
 		enforce(name in states);
-		if (currentState) {
-			rootComponent.removeChild(currentState);
+		try {
+			if (currentState) {
+				rootComponent.removeChild(currentState);
+			}
+			currentState = states[name];
+			rootComponent.addChild(currentState);
+			calculateLayout();
 		}
-		currentState = states[name];
-		rootComponent.addChild(currentState);
-		calculateLayout();
+		catch(Exception e) {
+			onException.dispatch(e);
+		}
 	}
 
 	void addState(string name, Component state) {
