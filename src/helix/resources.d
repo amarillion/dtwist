@@ -233,8 +233,11 @@ class ResourceManager
 	}
 
 	void refreshAll() {
-		//TODO: loop over all resource maps, not just the one...
+		//TODO: loop using tuple...
 		shaders.refresh();
 		bitmaps.refresh();
+		jsons.refresh();
+		fonts.refresh();
+		samples.refresh();
 	}
 }
