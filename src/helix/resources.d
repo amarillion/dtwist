@@ -7,6 +7,7 @@ import allegro5.allegro_audio;
 import std.path;
 import std.json;
 import std.stdio;
+import std.exception : enforce;
 import std.format : format;
 import std.string : toStringz;
 import std.file : readText;
@@ -107,7 +108,7 @@ class ResourceManager
 		}
 
 		auto opIndex(string key) {
-			assert (key in data, format("There is no resource named [%s]", key));
+			enforce(key in data, format("There is no resource named [%s]", key));
 			return data[key];
 		}
 
@@ -202,8 +203,6 @@ class ResourceManager
 	public void addFile(string filename)
 	{
 		string ext = extension(filename); // ext includes '.'
-		string base = baseName(stripExtension(filename));
-		
 		if (ext == ".ttf") {
 			fonts.putFile(filename);
 		}
@@ -218,6 +217,9 @@ class ResourceManager
 		}
 		else if (ext == ".glsl") {
 			shaders.putFile(filename);
+		}
+		else {
+			enforce(false, format("Unrecognized extension %s for file %s", ext, filename));
 		}
 	}
 
