@@ -86,6 +86,7 @@ class ResourceManager
 	*/
 	struct ResourceMap(T, alias LoadFunc) {
 		private T[string] data;
+		private T[] archived;
 
 		//corresponding file info. Note: generated resources have no corresponding files.
 		private FileInfo[string] files;
@@ -97,8 +98,16 @@ class ResourceManager
 			onReload[key] = Signal!void();
 		}
 
+		/** 
+		 * If a resource with this key already exists, putFile() is ignored.
+		 * Params:
+		 *   fname path to file to load.
+		 */
 		void putFile(string fname) {
 			string key = baseName(stripExtension(fname));
+			if (key in data) {
+				return;
+			}
 			// TODO Allegro log file loading...
 			// writefln("Loading type: key: %s file: %s", key, fname);
 			T value = LoadFunc(fname);
@@ -116,7 +125,11 @@ class ResourceManager
 			foreach (f; data) {
 				destroy(f);
 			}
+			foreach (f; archived) {
+				destroy(f);
+			}
 			data = null;
+			archived = null;
 		}
 
 		void refresh() {
@@ -126,6 +139,10 @@ class ResourceManager
 					// TODO Allegro log: file refresh...
 					fileInfo.update();
 					T value = LoadFunc(fileInfo.filename);
+					
+					archived ~= data[key]; // To avoid memory leak, old value is moved to archive. 
+					// It could still be in use somewhere in the game.
+					
 					data[key] = value;
 					onReload[key].dispatch();
 				}
