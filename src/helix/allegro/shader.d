@@ -93,6 +93,11 @@ class Shader {
 			return this;
 		}
 
+		UniformSetter withInt(string name, int value) {
+			al_set_shader_int(toStringz(name), value);
+			return this;
+		}
+
 		UniformSetter withSampler(string name, Bitmap value, int unit = 1) {
 			al_set_shader_sampler(toStringz(name), value.ptr, unit);
 			return this;
