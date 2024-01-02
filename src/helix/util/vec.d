@@ -80,6 +80,18 @@ struct vec(int N, V) {
 		return true;
 	}
 
+	/** 
+	Applies std.math.sgn to each element in the vector. For example, vec3i(5, 0, -10) becomes vec3i(1, 0, -1)
+	*/ 
+	vec!(N, V) sgn() const {
+		import std.math;
+		vec!(N, V) result;
+		foreach(i; 0..N) {
+			result.val[i] = val[i].sgn;
+		}
+		return result;
+	}
+
 	/** combine two vectors */
 	vec!(N, V) opBinary(string op)(vec!(N, V) rhs) const if (op == "-" || op == "+" || op == "*" || op == "/") {
 		vec!(N, V) result;

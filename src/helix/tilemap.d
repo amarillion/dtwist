@@ -76,7 +76,7 @@ class TileMap {
 			auto data = l["data"].array;
 			foreach (p; PointRange(grid.size)) {
 				const val = to!int(data[grid.toIndex(p)].integer - 1);
-				grid.set(p, val);
+				grid[p] = val;
 			}
 		}
 
@@ -126,7 +126,7 @@ void draw_tilemap(TileMap tilemap, Rectangle shape, Point viewPos = Point(0), in
 	foreach (tilePos; PointRange(tilemap.layers[layer].size)) {
 		Point pixelPos = tilePos * tileSize - viewPos;
 
-		int i = tilemap.layers[layer].get(tilePos);
+		int i = tilemap.layers[layer][tilePos];
 		if (i >= 0 && i < tilemap.tilelist.tilenum) {
 			teg_drawtile(tilemap.tilelist, i, pixelPos.x, pixelPos.y);
 		}

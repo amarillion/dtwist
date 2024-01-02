@@ -1,7 +1,9 @@
 module helix.util.grid;
 
-import helix.util.vec;
 import std.conv;
+
+import helix.util.vec;
+import helix.util.coordrange;
 
 class Grid(int N, T) {
 	T[] data;
@@ -47,45 +49,58 @@ class Grid(int N, T) {
 		return result;
 	}
 
+	deprecated
 	void set(const vec!(N, int) p, T val) {
 		assert(inRange(p));
 		data[toIndex(p)] = val;
 	}
 
+	deprecated
 	ref T get(const vec!(N, int) p) {
 		assert(inRange(p));
 		return data[toIndex(p)];
 	}
 
-/*
-	//TODO
-	string format(string cellSep = ", ", string lineSep = "\n") {
-		char[] result;
-		int i = 0;
-		
-		const int lineSize = size.x;
-		bool firstLine = true;
-		bool firstCell = true;
-		foreach (base; PointRange(size)) {
-			if (i % lineSize == 0 && !firstLine) {
-				result ~= lineSep;
-				firstCell = true;
-			}
-			if (!firstCell) result ~= cellSep;
-			result ~= to!string(get(base));
-			i++;
+	// const version
+	ref auto opIndex(const vec!(N, int) p) const {
+		assert(inRange(p));
+		return data[toIndex(p)];
+	}
+
+	// non-const version
+	ref auto opIndex(const vec!(N, int) p) {
+		assert(inRange(p));
+		return data[toIndex(p)];
+	}
+
+	// TODO: also implement for N == 3...
+	static if (N == 2) {
+		string format(string cellSep = ", ", string lineSep = "\n") const {
+			char[] result;
+			int i = 0;
 			
-			firstLine = false;
-			firstCell = false;
+			const int lineSize = size.x;
+			bool firstLine = true;
+			bool firstCell = true;
+			foreach (base; CoordRange!(vec!(N, int))(size)) {
+				if (i % lineSize == 0 && !firstLine) {
+					result ~= lineSep;
+					firstCell = true;
+				}
+				if (!firstCell) result ~= cellSep;
+				result ~= to!string(this[base]);
+				i++;
+				
+				firstLine = false;
+				firstCell = false;
+			}
+			return result.idup;
 		}
-		return result.idup;
-	}
 
-	override string toString() {
-		return format();
+		override string toString() const {
+			return format();
+		}
 	}
-*/
-
 
 	struct NodeRange {
 
@@ -100,6 +115,7 @@ class Grid(int N, T) {
 			remain = to!int(parent.data.length);
 		}
 
+		/* use ref to support in place-modification */
 		ref T front() {
 			return parent.data[pos];
 		}
@@ -133,7 +149,6 @@ class Grid(int N, T) {
 }
 
 unittest {
-
 	// toIndex test
 	auto grid = new Grid!(3, bool)(32, 16, 4);
 
@@ -142,4 +157,14 @@ unittest {
 	assert (grid.toIndex(vec3i(0, 1, 0)) == 32);
 	assert (grid.toIndex(vec3i(0, 0, 1)) == 32 * 16);
 	assert (grid.toIndex(vec3i(7, 7, 3)) == 7 + (32 * 7) + (16 * 32 * 3));
+
+	// opIndex test
+	auto grid2 = new Grid!(2, bool)(2, 2, false);
+	assert (grid2[Point(0, 0)] == false);
+	grid2[Point(0, 0)] = true;
+	assert (grid2[Point(0, 1)] == false);
+
+	const grid3 = grid2;
+	assert (grid3[Point(0, 0)] == true);
+	// grid3[Point(0, 0)] = false; // Does not compile...
 }
