@@ -4,7 +4,7 @@ import std.json;
 import std.format;
 import helix.util.grid;
 import helix.util.vec;
-import helix.util.rect;
+import helix.util.box;
 import helix.util.coordrange;
 import helix.allegro.bitmap;
 

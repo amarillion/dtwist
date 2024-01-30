@@ -4,7 +4,7 @@ import helix.component;
 import helix.color;
 import helix.mainloop;
 import helix.util.vec;
-import helix.util.rect;
+import helix.util.box;
 import helix.layout;
 import helix.widgets;
 import helix.signal;
@@ -107,7 +107,7 @@ class ViewPort : Component {
 		int ocx, ocy, ocw, och;
 		al_get_clipping_rectangle(&ocx, &ocy, &ocw, &och);
 
-		Rectangle clientRect = shape;
+		Rect!int clientRect = shape;
 		al_set_clipping_rectangle (clientRect.x, clientRect.y, clientRect.w, clientRect.h);
 
 		GraphicsContext gc2 = new GraphicsContext();

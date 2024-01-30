@@ -1,7 +1,7 @@
 module helix.layout;
 
 import std.json;
-import helix.util.rect;
+import helix.util.box;
 import std.exception;
 import std.format;
 import std.stdio;
@@ -67,7 +67,7 @@ struct LayoutData {
 		verticalRule = ruleMap[rule][1];
 	}
 
-	Rectangle calculate(Rectangle parent) {
+	Rect!int calculate(Rect!int parent) {
 
 		int[2] calculateAxis(int start, int end, int size, LayoutRule rule) {
 			final switch (rule) {

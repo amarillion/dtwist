@@ -28,7 +28,7 @@ import helix.component;
 import helix.resources;
 import helix.style;
 import helix.util.vec;
-import helix.util.rect;
+import helix.util.box;
 import helix.util.string;
 import helix.util.math;
 import helix.audio;
@@ -133,8 +133,8 @@ class MainLoop
 	}
 
 	/** use config, monitor size and defaults */
-	private Rectangle determineWindowPosition(int defaultW, int defaultH) {
-		Rectangle result;
+	private Rect!int determineWindowPosition(int defaultW, int defaultH) {
+		Rect!int result;
 
 		// obtain monitor size
 		ALLEGRO_MONITOR_INFO info;
@@ -144,12 +144,12 @@ class MainLoop
 		
 		//NOTE: int.max means: automatic positioning
 		//Trying to persist x,y was too buggy, see: https://www.allegro.cc/forums/thread/618393
-		result.x = int.max;
-		result.y = int.max;
+		result.pos.x = int.max;
+		result.pos.y = int.max;
 
 		// leave some room around window for window border, start bar etc.
-		result.w = bound(256, monitorW - 128, get_config!int(config, "window", "width", defaultW));
-		result.h = bound(128, monitorH - 128, get_config!int(config, "window", "height", defaultH));
+		result.size.x = bound(256, monitorW - 128, get_config!int(config, "window", "width", defaultW));
+		result.size.y = bound(128, monitorH - 128, get_config!int(config, "window", "height", defaultH));
 		
 		return result;
 	}
@@ -450,7 +450,7 @@ class MainLoop
 	void calculateLayout(Component c = null) {
 
 		if (c is null) {
-			Rectangle displayRect = Rectangle(0, 0, display.al_get_display_width, display.al_get_display_height);
+			Rect!int displayRect = Rect!int(0, 0, display.al_get_display_width, display.al_get_display_height);
 			rootComponent.calculateRecursive(displayRect);
 		}
 		else {

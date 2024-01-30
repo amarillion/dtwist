@@ -11,7 +11,7 @@ import helix.util.math;
 import helix.mainloop;
 import helix.style;
 import helix.signal;
-import helix.util.rect;
+import helix.util.box;
 import helix.util.vec;
 import helix.layout;
 import helix.color;
@@ -26,7 +26,7 @@ import std.conv;
 
 class GraphicsContext
 {
-	Rectangle area;
+	Rect!int area;
 	Point offset;
 }
 
@@ -140,9 +140,9 @@ class Component
 	}
 
 	// NOTE: can not be set directly. Will always be derived from applyLayout.
-	private Rectangle _shape;
+	private Rect!int _shape;
 
-	@property final Rectangle shape() {
+	@property final Rect!int shape() {
 		return this._shape;
 	}
 
@@ -170,12 +170,12 @@ class Component
 		if (newShape != _shape) {
 			const oldShape = _shape;
 			_shape = newShape;
-			this.onResize.dispatch(ChangeEvent!Rectangle(oldShape, newShape));
+			this.onResize.dispatch(ChangeEvent!(Rect!int)(oldShape, newShape));
 		}
 	}
 
 	//TODO: naming
-	void calculateRecursive(Rectangle parentRect) {
+	void calculateRecursive(Rect!int parentRect) {
 		applyLayout(parentRect);
 		
 		foreach(child; children) {
@@ -286,10 +286,8 @@ class Component
 	}
 
 	/** set both x and y together */
-	public final void setPosition (int _x, int _y)
-	{
-		shape.x = _x;
-		shape.y = _y;
+	public final void setPosition (int _x, int _y) {
+		shape.pos = Point(_x, _y);
 	}	
 	
 	/** should return true if keyboard event is handled, false otherwise */
@@ -330,13 +328,13 @@ class Component
 		return shape.contains(p);
 	}
 	
-	@property int x() { return shape.x; }
-	@property int y() { return shape.y; }
-	@property int w() { return shape.w; }
-	@property int h() { return shape.h; }
+	@property int x() { return shape.pos.x; }
+	@property int y() { return shape.pos.y; }
+	@property int w() { return shape.size.x; }
+	@property int h() { return shape.size.y; }
 
-	@property void x(int val) { shape.x = val; }
-	@property void y(int val) { shape.y = val; }
-	@property void w(int val) { shape.w = val; }
-	@property void h(int val) { shape.h = val; }
+	@property void x(int val) { shape.pos.x = val; }
+	@property void y(int val) { shape.pos.y = val; }
+	@property void w(int val) { shape.size.x = val; }
+	@property void h(int val) { shape.size.y = val; }
 }
