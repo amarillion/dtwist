@@ -12,14 +12,10 @@ struct Box(int N, T) {
 	Coord pos;
 	Coord size;
 
-	/* use pos.x instead */
-	deprecated @property T x() { return pos.x; }
-	/* use pos.y instead */
-	deprecated @property T y() { return pos.y; }
-	/* use size.x instead */
-	deprecated @property T w() { return size.x; }
-	/* use size.y instead */
-	deprecated @property T h() { return size.y; }
+	@property T x() { return pos.x; }
+	@property T y() { return pos.y; }
+	@property T w() { return size.x; }
+	@property T h() { return size.y; }
 	
 	@property T x2() { return pos.x + size.x; }
 	@property T y2() { return pos.y + size.y; }

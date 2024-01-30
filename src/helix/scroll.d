@@ -119,12 +119,12 @@ class ViewPort : Component {
 		al_set_clipping_rectangle(ocx, ocy, ocw, och);
 	}
 
-	override void calculateRecursive(Rectangle parentRect) {
+	override void calculateRecursive(Rect!int parentRect) {
 		applyLayout(parentRect);
 
 		const size = scrollable.getPreferredSize();
 		scrollable.setRelative(x, y, 0, 0, size.x, size.y, LayoutRule.BEGIN, LayoutRule.BEGIN);
-		const newParentRect = Rectangle(0, 0, size.x, size.y);
+		const newParentRect = Rect!int(0, 0, size.x, size.y);
 
 		scrollable.calculateRecursive(newParentRect);
 	}

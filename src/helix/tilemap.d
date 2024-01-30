@@ -88,7 +88,7 @@ class TileMap {
 	}
 }
 
-void draw_tilemap(TileMap tilemap, Rectangle shape, Point viewPos = Point(0), int layer = 0) {
+void draw_tilemap(TileMap tilemap, Rect!int shape, Point viewPos = Point(0), int layer = 0) {
 
 	assert(tilemap.layers[layer]);
 	assert(tilemap.tilelist.bmp);
@@ -119,7 +119,7 @@ void draw_tilemap(TileMap tilemap, Rectangle shape, Point viewPos = Point(0), in
 	// TODO: setting clipping should maybe be built into the Component system...
 	al_get_clipping_rectangle(&ox, &oy, &ow, &oh);
 
-	Rectangle area = shape.intersection(Rectangle(ox, oy, ow, oh));
+	Rect!int area = shape.intersection(Rect!int(ox, oy, ow, oh));
 	al_set_clipping_rectangle(area.x, area.y, area.w, area.h);
 	
 	const tileSize = Point(tilemap.tilelist.tilew, tilemap.tilelist.tileh);

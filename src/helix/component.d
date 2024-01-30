@@ -155,7 +155,7 @@ class Component
 	}
 
 	/** calculate shape for this component. Non-recursive. */
-	final void applyLayout(Rectangle parentRect) {
+	final void applyLayout(Rect!int parentRect) {
 		// TODO - can this be done at the "layoutData" level? It doesn't have access to preferredSize... Pass as lazy parameter?
 		if (sizeRule == SizeRule.AUTO) {
 			const p = getPreferredSize();
@@ -321,7 +321,7 @@ class Component
 	/**
 		Called whenever the shape of this component has been recalculated 
 	*/
-	Signal!(ChangeEvent!Rectangle) onResize;
+	Signal!(ChangeEvent!(Rect!int)) onResize;
 
 	public bool contains(Point p)
 	{

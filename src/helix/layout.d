@@ -84,6 +84,6 @@ struct LayoutData {
 		if (h[1] == 0 || v[1] == 0) {
 			writeln("Warn: component with zero-width or height is invisible...");
 		}
-		return Rectangle(h[0], v[0], h[1], v[1]);
+		return Rect!int(h[0], v[0], h[1], v[1]);
 	}
 }
