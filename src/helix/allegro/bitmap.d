@@ -35,6 +35,12 @@ class Bitmap {
 		return new Bitmap(bmp);
 	}
 
+	Bitmap subBitmap(int x, int y, int w, int h) {
+		auto bmp = al_create_sub_bitmap(_ptr, x, y, w, h);
+		enforce(bmp, "Something went wrong while creating sub bitmap"); //TODO refer to allegro error...
+		return new Bitmap(bmp);
+	}
+
 	private this(ALLEGRO_BITMAP* val) {
 		_ptr = val;
 	}
