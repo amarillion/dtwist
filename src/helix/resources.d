@@ -9,13 +9,15 @@ import std.json;
 import std.stdio;
 import std.exception : enforce;
 import std.format : format;
-import std.string : toStringz;
+import std.string : toStringz, lastIndexOf;
 import std.file : readText;
 import helix.allegro.bitmap;
 import helix.allegro.sample;
 import helix.allegro.audiostream;
 import helix.allegro.font;
 import helix.signal;
+import std.array;
+import std.file;
 
 unittest {
 	//TODO, make it like this: 
@@ -215,6 +217,24 @@ class ResourceManager
 		// TODO: find streaming parser to support large files
 		JSONValue result = parseJSON(buffer);
 		return result;
+	}
+
+	// TODO very simple globbing for now. No wildcards allowed before last '/''
+	public void addGlob(string glob) {
+		long idx = glob.lastIndexOf('/');
+		string namePart, pathPart;
+		if (idx >= 0) {
+			namePart = glob[idx + 1 .. $];
+			pathPart = glob[0 .. idx];
+		}
+		else {
+			namePart = glob;
+			pathPart = ".";
+		}
+		
+		foreach (entry; dirEntries(pathPart, namePart, SpanMode.shallow)) {
+			addFile(entry.name);
+		}
 	}
 
 	public void addFile(string filename)
