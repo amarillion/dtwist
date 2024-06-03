@@ -59,6 +59,10 @@ class ScrollPane : Component
 		});
 	}
 
+	void scrollTo(Point p) {
+		vp.setOffsetX(p.x);
+		vp.setOffsetY(p.y);
+	}
 }
 
 class ViewPort : Component {
