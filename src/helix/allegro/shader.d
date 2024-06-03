@@ -1,12 +1,14 @@
 module helix.allegro.shader;
 
-import helix.allegro.bitmap;
-import allegro5.allegro;
-import allegro5.shader;
 import std.string : toStringz;
 import std.format : format;
 import std.conv : to;
 
+import allegro5.allegro;
+import allegro5.shader;
+
+import helix.allegro.bitmap;
+import helix.util.vec;
 
 class ShaderException : Exception {
 	this(string msg, string file= __FILE__, size_t line = __LINE__) {
@@ -100,6 +102,12 @@ class Shader {
 
 		UniformSetter withSampler(string name, Bitmap value, int unit = 1) {
 			al_set_shader_sampler(toStringz(name), value.ptr, unit);
+			return this;
+		}
+
+		UniformSetter withVec3f(string name, vec!(3, float) value) {
+			float[3] data = value.val;
+			al_set_shader_float_vector(toStringz(name), 3, &data[0], 1);
 			return this;
 		}
 	}
