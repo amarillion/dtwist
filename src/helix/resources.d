@@ -221,7 +221,7 @@ class ResourceManager
 
 	// TODO very simple globbing for now. No wildcards allowed before last '/''
 	public void addGlob(string glob) {
-		long idx = glob.lastIndexOf('/');
+		size_t idx = glob.lastIndexOf('/');
 		string namePart, pathPart;
 		if (idx >= 0) {
 			namePart = glob[idx + 1 .. $];
